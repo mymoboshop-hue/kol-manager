@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KOL 合作管理系統</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,"Noto Sans TC",sans-serif;font-size:13px;background:#f4f2ee;color:#1a1916}
+/* header */
+.hd{background:#2d4a3e;color:#fff;padding:0 20px;height:52px;display:flex;align-items:center;justify-content:space-between}
+.hd-title{font-size:15px;font-weight:700}
+.hd-sub{font-size:12px;opacity:.7}
+/* layout */
+.layout{display:flex;height:calc(100vh - 52px)}
+/* sidebar */
+.sb{width:200px;background:#fff;border-right:1px solid #e2ddd5;padding:12px;overflow-y:auto;flex-shrink:0}
+.sb-sec{margin-bottom:16px}
+.sb-lbl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7a7670;margin-bottom:6px}
+.fb{display:flex;align-items:center;justify-content:space-between;padding:5px 9px;border-radius:6px;border:none;background:transparent;cursor:pointer;font-size:12px;color:#1a1916;width:100%;text-align:left}
+.fb:hover{background:#f4f2ee}
+.fb.on{background:#2d4a3e;color:#fff}
+.fb .c{font-size:10px;font-family:monospace;opacity:.7}
+/* main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* toolbar */
+.tb{background:#fff;border-bottom:1px solid #e2ddd5;padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tb input[type=text]{flex:1;min-width:140px;height:34px;border:1px solid #d5d0c8;border-radius:7px;padding:0 10px;background:#f8f7f4;font-size:13px;outline:none}
+.tb input[type=text]:focus{border-color:#2d4a3e}
+.btn{height:34px;padding:0 12px;border:1px solid #d5d0c8;border-radius:7px;background:#f8f7f4;cursor:pointer;font-size:13px;color:#1a1916;white-space:nowrap}
+.btn:hover{background:#eae7e0}
+.btn-p{background:#2d4a3e;color:#fff;border-color:#2d4a3e}
+.btn-p:hover{background:#1f3329}
+.btn-d{background:#fde8e8;color:#8a1a1a;border-color:#f5c5c5;padding:0 8px}
+.btn-d:hover{background:#fbd0d0}
+.btn-warn{background:#faeeda;color:#633806;border-color:#e8c87a;padding:0 10px}
+/* stats */
+.stats{background:#fff;border-bottom:1px solid #e2ddd5;padding:7px 14px;display:flex;gap:18px;font-size:12px;color:#7a7670;flex-wrap:wrap}
+.stats strong{color:#2d4a3e;font-size:15px;font-weight:700;font-family:monospace}
+/* table */
+.tbl-wrap{flex:1;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:900px}
+thead{position:sticky;top:0;z-index:5;background:#f4f2ee}
+th{padding:8px 10px;text-align:left;font-size:11px;font-weight:700;color:#7a7670;border-bottom:1px solid #e2ddd5;white-space:nowrap;cursor:pointer;user-select:none}
+th:hover{color:#2d4a3e}
+td{padding:7px 10px;border-bottom:1px solid #eae7e0;vertical-align:middle;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:hover td{background:#faf9f6}
+.kol-link{color:#2d4a3e;font-weight:600;text-decoration:none;font-size:12px}
+.kol-link:hover{text-decoration:underline}
+/* tags */
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.t-blue{background:#e6f1fb;color:#0c447c}
+.t-pink{background:#fbeaf0;color:#72243e}
+.t-green{background:#eaf3de;color:#27500a}
+.t-amber{background:#faeeda;color:#633806}
+.t-gray{background:#f1efe8;color:#444441}
+.t-red{background:#fcebeb;color:#791f1f}
+/* inline editable */
+.il{border:1px solid transparent;border-radius:5px;background:transparent;font-family:inherit;font-size:12px;color:#1a1916;padding:2px 5px;width:100%}
+.il:hover{border-color:#d5d0c8;background:#f8f7f4}
+.il:focus{border-color:#2d4a3e;background:#fff;outline:none}
+/* modal */
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;overflow-y:auto;padding:40px 20px}
+.modal-wrap.open{display:block}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:580px;margin:0 auto;box-shadow:0 8px 40px rgba(0,0,0,.18)}
+.modal-hd{padding:18px 22px 14px;border-bottom:1px solid #e2ddd5;display:flex;justify-content:space-between;align-items:center}
+.modal-hd h3{font-size:15px;font-weight:500}
+.modal-body{padding:18px 22px}
+.modal-ft{padding:12px 22px;border-top:1px solid #e2ddd5;display:flex;justify-content:flex-end;gap:8px}
+/* form */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg.full{grid-column:1/-1}
+.fg label{font-size:11px;font-weight:700;color:#7a7670;text-transform:uppercase;letter-spacing:.05em}
+.fg input,.fg select,.fg textarea{border:1px solid #d5d0c8;border-radius:7px;padding:6px 10px;background:#f8f7f4;font-size:13px;font-family:inherit;height:34px;outline:none}
+.fg textarea{height:72px;resize:vertical}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#2d4a3e}
+.eff-title{font-size:11px;font-weight:700;text-transform:uppercase;color:#7a7670;border-top:1px solid #e2ddd5;margin-top:4px;padding-top:14px;margin-bottom:10px}
+/* detail */
+.d-sec{font-size:11px;font-weight:700;color:#7a7670;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid #eae7e0;text-transform:uppercase}
+.d-row{display:flex;gap:10px;margin-bottom:8px;font-size:13px}
+.d-key{color:#7a7670;width:90px;flex-shrink:0}
+.d-val{flex:1;word-break:break-all;white-space:pre-wrap;line-height:1.5}
+.pbox{background:#f8f7f4;border-radius:7px;padding:10px;font-family:monospace;font-size:12px;line-height:1.8;white-space:pre-wrap;word-break:break-all;max-height:150px;overflow-y:auto}
+.eff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px}
+.eff-card{background:#f8f7f4;border-radius:8px;padding:10px;text-align:center}
+.eff-num{font-family:monospace;font-size:20px;font-weight:700;color:#2d4a3e}
+.eff-lbl{font-size:11px;color:#7a7670;margin-top:3px}
+/* empty */
+.empty{text-align:center;padding:60px;color:#7a7670}
+/* loading overlay */
+#loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:14px;color:#2d4a3e;font-weight:500}
+#loading-overlay.hide{display:none}
+.spinner{width:32px;height:32px;border:3px solid #e2ddd5;border-top-color:#2d4a3e;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* sync banner */
+#sync-banner{position:fixed;bottom:16px;right:16px;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;z-index:999;box-shadow:0 2px 12px rgba(0,0,0,.15);cursor:pointer;opacity:0;transition:opacity .4s;pointer-events:none}
+#sync-banner.show{opacity:1;pointer-events:auto}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <span class="hd-title">✦ KOL 合作管理系統</span>
+  <span class="hd-sub" id="hd-date"></span>
+</div>
+
+<div class="layout">
+  <aside class="sb">
+    <div class="sb-sec"><div class="sb-lbl">狀態</div><div id="sb-status"></div></div>
+    <div class="sb-sec"><div class="sb-lbl">合作形式</div><div id="sb-type"></div></div>
+    <div class="sb-sec"><div class="sb-lbl">費用</div><div id="sb-pay"></div></div>
+    <div class="sb-sec"><div class="sb-lbl">負責人</div><div id="sb-owner"></div></div>
+    <div class="sb-sec"><div class="sb-lbl">廣告授權</div><div id="sb-ad"></div></div>
+  </aside>
+
+  <div class="main">
+    <div class="tb">
+      <input type="text" id="search" placeholder="搜尋 KOL、主題、負責人...">
+      <button class="btn btn-warn" id="btn-reset">✕ 清除篩選</button>
+      <div style="display:flex;border:1px solid #d5d0c8;border-radius:7px;overflow:hidden">
+        <button class="btn time-btn on" data-p="all" style="border:none;border-radius:0;height:34px;padding:0 10px;font-size:12px">全部</button>
+        <button class="btn time-btn" data-p="week" style="border:none;border-left:1px solid #d5d0c8;border-radius:0;height:34px;padding:0 10px;font-size:12px">本週</button>
+        <button class="btn time-btn" data-p="month" style="border:none;border-left:1px solid #d5d0c8;border-radius:0;height:34px;padding:0 10px;font-size:12px">本月</button>
+        <button class="btn time-btn" data-p="custom" style="border:none;border-left:1px solid #d5d0c8;border-radius:0;height:34px;padding:0 10px;font-size:12px">自訂</button>
+      </div>
+      <div id="custom-range" style="display:none;align-items:center;gap:6px;font-size:12px;color:#7a7670">
+        <input type="date" id="range-from" style="height:34px;border:1px solid #d5d0c8;border-radius:7px;padding:0 8px;font-size:12px;background:#f8f7f4">
+        <span>～</span>
+        <input type="date" id="range-to" style="height:34px;border:1px solid #d5d0c8;border-radius:7px;padding:0 8px;font-size:12px;background:#f8f7f4">
+      </div>
+      <button class="btn" id="btn-export">💾 匯出</button>
+      <input type="file" id="file-import" accept=".json" style="display:none">
+      <button class="btn" id="btn-import">📂 匯入</button>
+      <div style="position:relative" id="sync-wrap">
+        <button class="btn" id="btn-sync">🔄 同步 ▾</button>
+        <div id="sync-menu" style="display:none;position:absolute;top:38px;right:0;background:#fff;border:1px solid #d5d0c8;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:180px;z-index:99;padding:4px 0">
+          <div class="sync-opt" data-act="pull" style="padding:9px 14px;cursor:pointer;font-size:13px">⬇️ 從 Sheets 拉取</div>
+          <div class="sync-opt" data-act="push" style="padding:9px 14px;cursor:pointer;font-size:13px;border-top:1px solid #f0ece5">⬆️ 推送到 Sheets</div>
+        </div>
+      </div>
+      <button class="btn btn-p" id="btn-add">+ 新增合作</button>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr id="thead-row">
+          <th>KOL 帳號</th>
+          <th>形式</th>
+          <th>粉絲數</th>
+          <th>主題</th>
+          <th>費用</th>
+          <th>廣告授權</th>
+          <th>狀態</th>
+          <th>合作日期</th>
+          <th>合作內容</th>
+          <th style="text-align:right">合作費用</th>
+          <th style="text-align:right">銷售收益</th>
+          <th style="text-align:right">ROI</th>
+          <th>操作</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty" style="display:none">找不到符合條件的資料</div>
+    </div>
+  </div>
+</div>
+
+<!-- Form Modal -->
+<div class="modal-wrap" id="form-wrap">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3 id="form-title">新增合作</h3>
+      <button class="btn" id="close-form">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="g2">
+        <div class="fg"><label>KOL 帳號 *</label><input id="f-kol" placeholder="帳號名稱"></div>
+        <div class="fg"><label>合作形式</label>
+          <select id="f-type"><option>圖文合作</option><option>REELS短片</option><option>Threads</option><option>YT影片</option><option>限動合作</option><option>抽獎合作</option></select>
+        </div>
+        <div class="fg"><label>粉絲數</label>
+          <select id="f-fans"><option value="">—</option><option>1千～5千</option><option>5千～1萬</option><option>1萬～3萬</option><option>3萬～5萬</option><option>5萬～10萬</option><option>10萬~15萬</option><option>15萬以上</option></select>
+        </div>
+        <div class="fg"><label>互惠 / 付費</label>
+          <select id="f-pay"><option>互惠</option><option>收費</option></select>
+        </div>
+        <div class="fg full"><label>主題</label><input id="f-topic" placeholder="e.g. 液態防曬衣"></div>
+        <div class="fg"><label>負責人</label><input id="f-owner" placeholder="e.g. 慧君"></div>
+        <div class="fg"><label>報價</label><input id="f-quote" placeholder="e.g. $6000"></div>
+        <div class="fg"><label>廣告授權</label>
+          <select id="f-adAuth"><option value="0">無</option><option value="1">有</option></select>
+        </div>
+        <div class="fg"><label>狀態</label>
+          <select id="f-status"><option>KOL洽談中</option><option>KOL拍攝中</option><option>已結案</option></select>
+        </div>
+        <div class="fg"><label>合作日期</label><input id="f-date" type="date"></div>
+        <div class="fg full"><label>挑選單品</label><textarea id="f-products"></textarea></div>
+        <div class="fg full"><label>合作內容連結（貼文/影片）</label><input id="f-postlink" placeholder="https://www.instagram.com/p/..."></div>
+        <div class="fg full"><label>商品連結</label><input id="f-link" placeholder="https://..."></div>
+        <div class="fg"><label>訂單編號</label><input id="f-order"></div>
+        <div class="fg full"><label>寄件地址 / 備註</label><textarea id="f-address"></textarea></div>
+        <div class="fg full eff-title">合作成效</div>
+        <div class="fg"><label>觸及人數</label><input id="f-reach" type="number" min="0"></div>
+        <div class="fg"><label>互動數</label><input id="f-engage" type="number" min="0"></div>
+        <div class="fg"><label>點擊數</label><input id="f-clicks" type="number" min="0"></div>
+        <div class="fg"><label>新增粉絲</label><input id="f-newfans" type="number" min="0"></div>
+        <div class="fg"><label>銷售件數</label><input id="f-units" type="number" min="0"></div>
+        <div class="fg"><label>銷售收益（元）</label><input id="f-revenue" type="number" min="0"></div>
+        <div class="fg full"><label>廣告主代碼</label><input id="f-adcode"></div>
+        <div class="fg full"><label>成效備註</label><textarea id="f-effnote"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" id="cancel-form">取消</button>
+      <button class="btn btn-p" id="save-form">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-wrap" id="detail-wrap">
+  <div class="modal">
+    <div class="modal-hd">
+      <h3 id="det-kol"></h3>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-p" id="det-edit-btn">編輯</button>
+        <button class="btn" id="close-detail">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="det-body"></div>
+    <div class="modal-ft">
+      <button class="btn btn-d" id="det-del-btn">刪除</button>
+      <button class="btn" id="close-detail2">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading-overlay"><div class="spinner"></div><span>正在連線資料庫，載入最新資料…</span></div>
+<div id="sync-banner"></div>
+
+<script type="module">
+// ── Firebase 設定 ──
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBqLCElsXA-THZjEIgnQVKutih5ZBQUOaU",
+  authDomain: "kol-manager-3b485.firebaseapp.com",
+  projectId: "kol-manager-3b485",
+  storageBucket: "kol-manager-3b485.firebasestorage.app",
+  messagingSenderId: "701289487361",
+  appId: "1:701289487361:web:6fb5c89b1538d5a501b400"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const COL = 'kols';
+
+// ── Seed data ──
+const SEED=[
+  {id:1,kol:"iamyuxixi",type:"圖文合作",fans:"1萬～3萬",topic:"液態防曬",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"等待商品寄出",owner:"慧君",products:"02200005 黑M\n01161068 黑M\n01040669 白S",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:2,kol:"a_fu_7",type:"圖文合作",fans:"1千～5千",topic:"M SERIES",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL洽談中",owner:"YURI",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:3,kol:"rere_0202",type:"圖文合作",fans:"1萬～3萬",topic:"M SERIES",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL洽談中",owner:"YURI",products:"▪️M系列極致舒適修身繭型褲（03021557）米杏 S\r\n▪️M系列配色薄透氧氣針織罩衫（02030254） 白色 S\r\n▪️交叉美背仙女bra top（01040583）白色 S",branch:"",address:"姓名：陳柏璇\r\n電話：0986662022\r\n地址：新北市中和區中山路三段170巷8弄13號（無區分樓層，直接按電鈴即可）",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:4,kol:"yuching330",type:"圖文合作",fans:"5千～1萬",topic:"M SERIES",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"YURI",products:"斜紋水洗棉背心短洋 (06010520) 白S",branch:"",address:"收件姓名：蘇渝晴\r\n聯絡電話：0975-572908\r\n收件地址：（郵遞區號500）彰化縣彰化市博愛街133號",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:5,kol:"cheesab",type:"圖文合作",fans:"1千～5千",topic:"M SERIES",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL洽談中",owner:"YURI",products:"M系列抽褶造型連袖襯衫(01031022)白S\n垂墜尼龍抽繩氣球長裙(08020615)杏S",branch:"",address:"姓名：鄭婷予\r\n電話：0920-371-568\r\n地址：338桃園市蘆竹區南順七街32巷6號6樓",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:6,kol:"yun860420",type:"圖文合作",fans:"1千～5千",topic:"M SERIES",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"YURI",products:"斜紋水洗棉背心短洋 (06010520) 白S",branch:"",address:"林立磑\r\n0912462846\r\n台北市信義區信安街47巷35號八樓",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:7,kol:"chi__ckennnnn1115",type:"圖文合作",fans:"1千～5千",topic:"M SERIES",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL洽談中",owner:"YURI",products:"01031023 襯衫（粉 / S）\n03021557 繭型褲（米白 / S）\n01040583（白 / S）",branch:"",address:"廖聆均\r\n0903140858\r\n台中市太平區坪林路20之2號",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:8,kol:"eazyuu",type:"圖文合作",fans:"1千～5千",topic:"柔塑挺感 LYOCELL",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"等待商品寄出",owner:"卉珍",products:"03050724 S 牛仔藍\n02030254 S 天空藍\n01040583 M 白",branch:"",address:"蔡欣妤0983081699\r\n高雄市鼓山區明華路292號3樓",link:"",effnote:"合作下來都會有收益 / 銷售面:轉換率高",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:9,kol:"ls.mssa",type:"REELS短片",fans:"1千～5千",topic:"柔塑挺感 LYOCELL",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"",status:"KOL洽談中",owner:"卉珍",products:"03010378  灰色 S\n01030957 米色 S\n\n03050724 白色 S\n01051122 寶石藍 S\n\n03050725 黑色 S\n01040625 黑色 S",branch:"",address:"李宇涵\r\n0935529936\r\n台中市西屯區國安一路129號二樓之5",link:"",effnote:"初次合作",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:10,kol:"meiiikuan__",type:"REELS短片",fans:"1萬～3萬",topic:"液態防曬門市",pay:"收費",quote:"$3,000\n（含廣告主）",adAuth:true,adPartner:true,adCode:"",status:"KOL洽談中",owner:"卉珍",products:"",branch:"",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=01040583,01031006,08020579,01040668%20,08020604,02030251,01040667,03021546,01031005,01161053,01040670,01040669",effnote:"5/29 芝山門市拍攝",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:11,kol:"cswai_",type:"REELS短片",fans:"1千～5千",topic:"液態防曬",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"等待商品寄出",owner:"慧君",products:"輕盈剛柔並濟工裝長褲 (03021536)  M卡其\n液態防曬-小花邊膠囊防曬外套 (02200005)  黑 L\n剪接口袋厚磅丹寧長褲 (03050709)  藍 L\n液態防曬-V領襯衫式兩穿防曬外套 (02200006)  黃 M\n造型肩帶穩定包覆bra top背心 (01040669) 紅 M",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:12,kol:"fdsunn",type:"REELS短片",fans:"1千～5千",topic:"液態防曬",pay:"互惠",quote:"",adAuth:false,adPartner:true,adCode:"",status:"等待商品寄出",owner:"慧君",products:"1. 液態防曬-小花邊膠囊防曬外套 (02200005) 黑藍Ｍ⭐️\n2. M系列百搭針織背心（01051100）法式藍Ｓ\n3. 不規則抽繩光澤人魚裙（08020556）秘境藍Ｍ\n4. 單寧刷色牛仔寬褲 03050649 藍色Ｍ\n5. MIT拼接柔霧荷葉上衣 (01014414) 白色Ｍ⭐️\n6. 側開衩抽繩針織背心（01160763）粉藍Ｍ\n7. 裸感霧面柔光質感短褲（03010323）淺藍Ｍ\n8. 液態防曬-輕便膠囊防曬外套 (02200008) 淺灰Ｍ⭐️\n9. 袖兩穿條紋口袋短袖襯衫（01031013）藍Ｍ\n10. 說好了去海邊堆堆裙（08070114）白Ｌ\n11. 零尷尬!裙裝必備!防內捲收腹無痕冰感安全褲 （03100003）淺灰Ｍ",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:13,kol:"re.neyu",type:"圖文合作",fans:"1千～5千",topic:"液態防曬",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"等待商品寄出",owner:"慧君",products:"02200005黑藍S \n08010110 S\n01040670 白S",branch:"",address:"杜宥嫻 0913998926 台北市大安區和平東路三段90號6樓之12",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:14,kol:"mmoolrlny",type:"圖文合作",fans:"1千～5千",topic:"液態防曬",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"",status:"等待商品寄出",owner:"慧君",products:"液態防曬-小花邊膠囊防曬外套 (02200005)M/黑藍\n不對稱領鏤空剪接上衣 (01161068) M/黑色\n視覺顯瘦剪接線牛仔裙 (08050096)M/煙霧灰\n液態防曬-V領襯衫式兩穿防曬外套 (02200006)M/雞蛋黃 \n多層剪接飄逸長裙 (08020608) M/白\n交叉美背仙女bra top (01040583) Ｍ/白",branch:"NORMCORE",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=01161051,08020603,02170039,08020607,06021237,02030251,01040662,08020605,01161052,08050096",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:15,kol:"jouanauoj",type:"圖文合作",fans:"1千～5千",topic:"液態防曬",pay:"收費",quote:"$1500",adAuth:true,adPartner:true,adCode:"",status:"等待商品寄出",owner:"慧君",products:"口袋抽褶設計抗皺長裙 (08020610)  灰藍/ s\n液態防曬-小花邊膠囊防曬外套 (02200005)  黑藍/M\n液態防曬-輕便膠囊防曬外套 (02200008)  白杏/M\n液態防曬-大口袋防曬襯衫 (02200004)  粉橘/s\n不規則抽繩光澤人魚裙08020556 珍珠白 /M",branch:"DESIGNER",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:16,kol:"預計5/11~5/17 發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:17,kol:"lys0627_",type:"REELS短片",fans:"1千～5千",topic:"丹寧追加",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"",status:"KOL拍攝中",owner:"慧君",products:"03050705 深藍S\r\n02030251 天空藍\r\n01161032 白色M \n08050096 M藍\r\n01051092 M 黑",branch:"NORMCORE",address:"李咏珊\n0986131852\n台北市信義區信安街168號8樓-12",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:18,kol:"hot66600",type:"REELS短片",fans:"1萬～3萬",topic:"液態防曬",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"",status:"KOL拍攝中",owner:"慧君",products:"液態防曬-輕便膠囊防曬外套 (02200008)  灰 M\n液態防曬-小花邊膠囊防曬外套 (02200005)  白 M/ 黑 M\n剪接口袋厚磅丹寧長褲 (03050709) 灰S\n08010110 雙綁帶百褶裙 灰 s\n01160846 Creamy.纖瘦包覆方領小釦Bratop 藍 M\n01160822 creamy.完美弧度美背包覆bra top 咖 s\n08020600 日常柔霧立體長裙 灰S\n01040670 極簡完美隱形bra top上衣 白  M",branch:"NORMCORE",address:"陳玟璇\n電話：0983582950\n地址：303新竹縣湖口鄉新竹工業區光復路20號",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:19,kol:"ynnus_ma_i",type:"圖文合作",fans:"1萬～3萬",topic:"液態防曬",pay:"互惠",quote:"投廣一週$1000",adAuth:false,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"慧君",products:"02200005 白 s\r\n01040583 白s\r\n03050612 錯位洗色設計感牛仔褲 藍s\r\n06021215 暈染感兩件式網紗洋裝 白s",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:20,kol:"franliiin",type:"REELS短片",fans:"",topic:"液態防曬",pay:"互惠",quote:"共同廣告投放\n維持 14 天以上",adAuth:false,adPartner:true,adCode:"",status:"KOL拍攝中",owner:"慧君",products:"02200006 液態防曬-V領襯衫式兩穿防曬外套   黑S/ 黃S\n03021420 不對稱層次飄逸寬褲 /米杏/ L\n01051092 輕柔雲朵兩件式針織外套 / 冰川灰/S 黑/S\n03021381 帥氣俐落造型寬褲  黑 L\n01160847 Creamy.纖瘦包覆繞頸Bratop 黑/M 復古米/M",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:21,kol:"kuoyr",type:"圖文合作",fans:"",topic:"液態防曬",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"慧君",products:"液態防曬-小花邊膠囊防曬外套 (02200005) S 純淨白\n剪接口袋厚磅丹寧長褲 (03050709) S 牛仔藍\n交叉美背仙女bra top (01040583) M 白色",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:22,kol:"ooonetime",type:"圖文合作",fans:"1千～5千",topic:"液態防曬",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"慧君",products:"- 交叉美背仙女bra top 01040583 / 白色 S\n- 皺皺布層次感V領背心 01040564 / 黑色 S\n- 柔軟西裝面料花苞短褲 03010351 / 黑色 S\n- 鏤空雙色S曲線針織上衣 01051010 / 綠色 S\n- 液態防曬-小花邊膠囊防曬外套 02200005 / 黑藍 S",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:23,kol:"wxuan.__",type:"圖文合作",fans:"",topic:"液態防曬",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"",status:"KOL拍攝中",owner:"慧君",products:"02200008 輕便膠囊防曬外套淺灰/S\n01040582 舒適包覆美背雙肩帶bra top白色/S\n08020418 典雅金釦撞色壓線裙黑色/S",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:24,kol:"weiweis0119",type:"圖文合作",fans:"1千～5千",topic:"液態防曬",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"卉珍",products:"液態防曬-小花邊膠囊防曬外套 (02200005) 杏 S\n交叉美背仙女bra top (01040583) 黑 S\n剪接口袋厚磅丹寧長褲 (03050709)  牛仔藍 S",branch:"",address:"",link:"",effnote:"初次合作",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:25,kol:"shiny__i",type:"圖文合作",fans:"1千～5千",topic:"液態防曬",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"卉珍",products:"02200005 液態防曬-小花邊膠囊防曬外套 (純淨白S\n01040583 交叉美背仙女bra top (黑Ｓ\n03050649 單寧刷色牛仔寬褲Ｓ",branch:"NORMCORE",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:26,kol:"mollyy.172",type:"REELS短片",fans:"",topic:"液態防曬",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"",status:"KOL拍攝中",owner:"卉珍",products:"02200004 白L\n02200006 水綠 L\n02200005 黑藍 M\n02200008 淺粉 M\n01040504 淺藍 S\n01040583 淺藍、黑 S\n01040670 白 S\n08020444 白 M\n03021544 軍綠 L\n03010329 藍色 M",branch:"",address:"姓名：游景恩\r\n電話：0914118997\r\n地址：新北市汐止區龍安路179號9樓",link:"",effnote:"上次臉書影片 收益8,454 / 銷售面:轉換率高",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:27,kol:"預計5/4~5/10 發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:28,kol:"_shu_a",type:"圖文合作",fans:"",topic:"涼感太空棉",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"等待商品寄出",owner:"伊廷",products:"MIT刺繡涼感太空棉上01014428 白色/S\n液態防曬-大口袋防曬襯衫（02200004）S/淺灰\n 輕鬆撞色車線寬褲（03021549）深灰M",branch:"NORMCORE",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:29,kol:"l.y_im",type:"REELS短片",fans:"1萬～3萬",topic:"液態防曬",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"KOL洽談中",owner:"卉珍",products:"5月中旬挑選",branch:"NORMCORE",address:"",link:"",effnote:"銷售面:帶動銷售",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:30,kol:"hanna0510__",type:"REELS短片",fans:"5萬～10萬",topic:"液態防曬\n(搭配抽獎2名)",pay:"收費",quote:"貼文5000 、Reels 8000\r\n投放廣告+2000",adAuth:true,adPartner:true,adCode:"",status:"KOL拍攝中",owner:"卉珍",products:"02200006 液態防曬-V領襯衫式兩穿防曬外套 S ｜白\r\n02200007 液態防曬-側抽皺防曬外套 S｜霧灰藍\r\n02200005 雙面羊駝背心外套 S｜黑藍\r\n01161068 不對稱領鏤空剪接上衣 S｜卡其綠\r\n01040583 交叉美背仙女bra top S｜白\r\n03010349 夏日度假條紋短褲 S｜杏\r\n03010349 夏日度假條紋短褲 S｜蝶豆花藍\r\n01051092 輕柔雲朵兩件式針織外套 S｜冰川灰\r\n03021468 設計感緹花直條長褲 S｜黑",branch:"NORMCORE",address:"",link:"",effnote:"初次合作 / 品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:31,kol:"iirenew_",type:"限動合作",fans:"1萬～3萬",topic:"液態防曬",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"卉珍",products:"01040583/S/白\n02200004/L/白",branch:"NORMCORE",address:"",link:"",effnote:"品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:32,kol:"thisisann6601",type:"圖文合作",fans:"5千～1萬",topic:"液態防曬",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"卉珍",products:"02200005 S 黑藍\n01161068 S 卡其綠\n03050709 S 灰",branch:"NORMCORE",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:33,kol:"yenyu___rita_",type:"REELS短片",fans:"1千～5千",topic:"涼感太空棉",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"伊廷",products:"MIT寬鬆涼感空氣棉上衣 (01014410) L｜卡其\nMIT寬鬆涼感空氣棉長裙 (08020601) L｜卡其\n\nMIT拼接涼感空氣棉上衣 (01014421) L｜白色\n暈染感兩件式網紗洋裝(06021215) L｜白色\n\nMIT刺繡涼感太空棉上衣 (01014428) L｜灰色\n休閒純棉蕾絲長洋裝06021200(慵懶綠/L)\n\nMIT刺繡涼感太空棉上衣 (01014428) L｜白色\n氣質女神長洋裝 (06021205)L｜白色",branch:"NORMCORE",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:34,kol:"預計4/27~5/3 發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:35,kol:"shiny__i",type:"圖文合作",fans:"1千～5千",topic:"丹寧追加",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"造型肩帶穩定包覆bra top背心 (01040669) -白Ｓ\n03021538 斜紋水洗棉彎刀褲-泥灰杏S",branch:"NORMCORE",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:36,kol:"megumi__no.7",type:"圖文合作",fans:"1千～5千",topic:"涼感太空棉",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"MIT刺繡涼感太空棉上衣 (01014428) S｜白色\n殊水洗剪接直筒長褲 (03021544) S｜咖啡",branch:"NORMCORE",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:37,kol:"rere_0202",type:"圖文合作",fans:"1萬～3萬",topic:"涼感太空棉",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"🔸MIT引線涼感空氣棉上衣（01014409）淺灰色 S\n🔸殊水洗剪接直筒長褲（03021544）軍綠色 S",branch:"NORMCORE",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:38,kol:"預計4/20~4/26 發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:39,kol:"joliechiao_",type:"REELS短片",fans:"1千～5千",topic:"BRA TOP -竹北門市\n4/11 下午",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBPVWHTNIbjgN-TQcm1xWZUV3ugu5re_lUL7s3kJCblI_dgqtR1qAkLryP8NnUs",status:"已結案",owner:"慧君",products:"涼感細肩帶削肩Bra Top 01161053青空藍 S\r\n方領寬後紐結bra top背心01040667 淺灰S\r\n小方領輕柔包覆bra top上衣01040668 白色 S\r\n造型肩帶穩定包覆bra top背心01040669 白色 S\r\n輕盈搭配針織外套 02030252藍色 M\r\n純棉蕾絲質感外套02060047M黑色",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:40,kol:"katherine_linn",type:"圖文合作",fans:"1千～5千",topic:"熱銷追加",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBNGS3r9nlvE_SBL3YVSgPQ_L3lYMI0hGXdhYuTjN_WCYlrsEMuZqnTDNAMwr8U",status:"已結案",owner:"卉珍",products:"兩件式絲光肩帶短袖上衣 01161052\n視覺顯瘦剪接線牛仔裙 08050096",branch:"",address:"",link:"",effnote:"初次合作\n共同投廣 收益$2,754 / 銷售面:帶動銷售",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:41,kol:"sherry_share_",type:"圖文合作",fans:"5千～1萬",topic:"涼感太空棉",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"MIT寬鬆涼感空氣棉長裙 黑/ L 08020601\n涼感細肩帶削肩Bra Top M號 白 01161053\n輕盈搭配針織外套 藍 / L 02030252",branch:"NORMCORE",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=08020601,01161053,02030252",effnote:"初次合作",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:42,kol:"_92ys_",type:"圖文合作",fans:"1千～5千",topic:"涼感太空棉",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"KOL拍攝中",owner:"伊廷",products:"08020601煙灰綠S、01014428白色S",branch:"NORMCORE",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:43,kol:"",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:44,kol:"預計4/13~4/19 發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:45,kol:"meiiikuan__",type:"REELS短片",fans:"1萬～3萬",topic:"BRA TOP",pay:"收費",quote:"$3,000\n（含廣告主）",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBO7QuluRTOWInNksQ5INg7_ei2sqOchWDrG59gNDyr9uGpHT-OELdF3ppMHiAw",status:"已結案",owner:"慧君",products:"01040583 交叉美背仙女bratop/白S\n01031006 日常寬鬆率性襯衫/檸檬黃S\n08020579 時髦設計感荷葉拼接格裙/咖啡S\n\n01040668 小方領輕柔包覆bratop上衣/黃S\n08020604 細緻剪裁工裝裙/深灰S\n02030251 必備百搭針織外套/白S\n\n01040667 方領寬後扭結bratop背心/深灰S\n03021546 設計腰頭寬版西裝長褲/灰S\n01031005 時髦光澤感條紋襯衫/藍S",branch:"",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=01040583,01031006,08020579,01040668%20,08020604,02030251,01040667,03021546,01031005,01161053,01040670,01040669",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:46,kol:"chianfei",type:"圖文合作",fans:"3萬～5萬",topic:"BRA TOP",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"交叉美背仙女bra top (01040583) 白色S\n低調奢華微光澤感豹紋魚尾裙 (08020533) 奶茶Ｓ",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:47,kol:"_228160",type:"圖文合作",fans:"1千～5千",topic:"涼感太空棉",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"MIT流線涼感太空棉上衣 (01014427) 白S\n輕鬆撞色車線寬褲 (03021549)  淺藍s",branch:"NORMCORE",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=03021549,01014427",effnote:"初次合作",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:48,kol:"預計4/6~4/12 發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:49,kol:"vivian_yang_1118",type:"圖文合作",fans:"1千～5千",topic:"BRA TOP",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"YURI",products:"01040667方領寬後扭結 黑 M\n03021531日常好搭經典長褲 黑M\n02030251必備百搭針織外套 白 M",branch:"NORMCORE",address:"楊依潔\r\n0922-231368\r\n台中市潭子區崇德路五段262號",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:50,kol:"ooooh_t",type:"圖文合作",fans:"1千～5千",topic:"BRA TOP",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"YURI",products:"02030251 白色S\r\n03021546 灰色m\r\n01161053 白色S",branch:"NORMCORE",address:"李雨曈/0919952570/高雄市楠梓區鳳楠路98-7號11樓",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:51,kol:"yuching330",type:"圖文合作",fans:"5千～1萬",topic:"BRA TOP",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"YURI",products:"01161053: 涼感細肩帶削肩Bra Top （寶石紅M）\n02030251: 必備百搭針織外套（白色S號）\n03021546: 設計腰頭寬版西裝長褲（黑色S號）",branch:"NORMCORE",address:"收件姓名：蘇渝晴\r\n聯絡電話：0975-572908\r\n收件地址：（郵遞區號500）彰化縣彰化市博愛街133號",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:52,kol:"aalina.c",type:"REELS短片",fans:"5千～1萬",topic:"BRA TOP -民權門市\n4/6 11:30",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBMnY0KcRDbx45INNp8I7NY8YzsxsB4MtxQQzW1xFvpgTn9rdekWkFllTgKCI5U",status:"已結案",owner:"慧君",products:"霧面質感時髦西裝短褲03010311 咖啡S\r\n水洗貓鬚紋牛仔寬褲03050652 M\r\n亮點連帽針織圍巾 16020207 橘紅\r\n垂墜剪裁A字裙08020541 黑S\r\n捲捲毛舒服蕾-小立領拉鍊外套02010195 暗紅 L\r\nNORM.簡約雙開衩寬版西裝外套02130091 淺灰M\r\n麂皮機車外套02040006 M\r\n個性皮革騎士外套02080016 酒紅M",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:53,kol:"flower.1520",type:"REELS短片",fans:"1千～5千",topic:"BRA TOP -中和環球\n4/10",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBPsBaILrExyM-nlPzqiyOoDqHQBL9yjYdxvUHbsrRHkUA_HsiWrCIPIZe0Dn2M",status:"已結案",owner:"慧君",products:"03021538 杏M /黑 L\r\n01161053 藍S\r\n02060044 黑 L\r\n01031005 藍 l\r\n08020607 卡其 s\r\n01161037 白m\r\n03021546 黑 M",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:54,kol:"allysahsu",type:"REELS短片",fans:"1千～5千",topic:"BRA TOP",pay:"收費",quote:"$4500元\n廣告授權$1000/月",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBOeoQa5i-YwuQa8wdPMjo7T7BDcOH2S0ZNujg89ixEhqZmFrV2FicbZ8NnGsfQ",status:"已結案",owner:"慧君",products:"03021459 M系列休閒無腰頭簡約長褲 S 淺灰\n03021457 俐落stay gold長褲 S   灰\n03050567 特殊抽鬚造型牛仔寬褲 S   深藍\n01040583 交叉美背仙女bratop/白色/S \n01161053 涼感細肩帶削尖bratop/黑/S\n01040669 造型肩帶穩定包覆bratop/紅/S \n03050649 單寧刷色牛仔寬褲 藍 S  \n01040667 方領寬厚扭結bratop/白/S \n01040670 極簡完美隱形bratop/白/S",branch:"LIFESTYLE",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:55,kol:"cxj_doris",type:"REELS短片",fans:"1千～5千",topic:"BRA TOP",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBOwnIRNrlC3JXi-HgYDXHSvkTxZ_AgQSO4Tj1m8dp3LsTeitW_S6P50HDBY47Y",status:"已結案",owner:"慧君",products:"01040667 方領寬後紐結bra top背心 白色 M\n01040669 造型肩帶穩定包覆bra top背心 黑M\n01040668 小方領輕柔包覆bra top上衣 白色M\n01040670 極簡完美隱形bra top上衣 深咖M\n01040583 交叉美背仙女bra top 白色M\n01161053 涼感細肩帶削肩Bra Top 寶石紅M\n03050700個性撞色拼接牛仔褲 淺藍L\n03021495 時髦拼接壓褶口袋長褲 黑L\n03021537 ALL IN抽繩縮口長褲 杏色 L\n02030251 必備百搭針織外套 黑M\n01031001 俐落口袋袖打褶襯衫 白 M",branch:"",address:"",link:"https://mo-bo.shop/uMbsz",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:56,kol:"aiko__mua",type:"REELS短片",fans:"1千～5千",topic:"BRA TOP",pay:"互惠",quote:"",adAuth:false,adPartner:true,adCode:"adcode-Q9jTBBOQYdN8TkmhumoKXKF9C00sXkD8Qxv3ya5DjgAcD8XWEpe1NefJJY2aHsJaKwA",status:"已結案",owner:"慧君",products:"03021531日常好搭經典長褲 卡其 XL\n03021447不對稱前擋片設計寬褲 灰 L\n01040667 方領寬後紐結bra top背心 棕 F\n01040668 小方領輕柔包覆bra top上衣  卡其 M\n01040670  極簡完美隱形bra top上衣 白 M\n02030251 必備百搭針織外套 粉 M\n01051167 日常鬆弛感針織上衣  灰 M\n08050096 視覺顯瘦剪接線牛仔裙 灰 L\n01031006 日常寬鬆率性襯衫 藍 M",branch:"",address:"",link:"https://mo-bo.shop/UV4qE",effnote:"初次合作",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:57,kol:"sharon_0109",type:"REELS短片",fans:"1千～5千",topic:"BRA TOP",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBPidPAGyz4glKUP3raDNHbpKd5xapLktDNU6noVuzOYI3v7kyVGiqVtydbCADI",status:"已結案",owner:"卉珍",products:"1.涼感細肩帶削肩 Bra Top（01161053）S / 紅\n2.小方領輕柔包覆 Bra Top 上衣（01040668）S / 白\n3.造型肩帶穩定包覆 Bra Top 背心（01040669）S / 黑\n4.交叉美背仙女 Bra Top（01040583）S / 白\n5.酷酷女生丹寧膝下褲（03050706）M / 深藍\n6.酷酷女生丹寧壓線背心（02170040）S / 深藍\n7.質感紋路肩帶開衩洋裝（06021235）M / 墨綠\n8.日常好搭經典長褲（03021531）M / 黑\n9.鏤空雙色 S 曲線針織上衣（01051010）S / 綠\n10.水洗貓鬚紋牛仔寬褲（03050652）M",branch:"",address:"·姓名：施詞萱\n·電話：0958-372-022\n·地址：新北市板橋區環河西路四段2235號二樓（國泰田社區）",link:"",effnote:"初次合作 / 品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:58,kol:"mollyy.172",type:"REELS短片",fans:"",topic:"BRA TOP",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBN6hbjGHQ42jC2Xr-WavRhpJVrm-OR5Sg4QGo0SehnVWref_9R3d39gU_iZ54Y",status:"已結案",owner:"卉珍",products:"1. 方領寬後扭結bra top背心01040667（黑）\n2. 造型肩帶穩定包覆bra top背心01040669（紅 S）\n3. 小方領輕柔包覆bra top上衣 01040668（白 S）\n4. 極簡完美隱形bra top上衣01040670（深咖啡 S）\n5. 個性條紋西裝吊帶背心01040662(灰 S）\n6. 視覺顯瘦剪接線牛仔裙08050096（煙霧灰 M）\n7. 高腰綁帶率性直筒寬褲03021527（藍 M）\n8. 個性皮革騎士外套02080016 （黑 M）",branch:"",address:"姓名：游景恩\r\n電話：0914118997\r\n地址：新北市汐止區龍安路179號9樓",link:"",effnote:"初次合作\n共同投廣 收益$8,454 / 銷售面:轉換率高",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:59,kol:"shan0219",type:"圖文合作",fans:"",topic:"26SS 新品(3/23～3/30)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"MIT織帶造型太空棉上衣 (01014406)   黑色M號\n抗皺剪接門襟口袋襯衫 (01031010)  粉色S號\n日常柔霧立體長裙 (08020600)  灰色M號",branch:"",address:"",link:"",effnote:"初次合作 / 品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:60,kol:"chiung_99",type:"圖文合作",fans:"5千～1萬",topic:"BRA TOP",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"08050096 視覺顯瘦剪接線牛仔裙 深藍 L\n02030251 天空藍 L\n01040670 白色 M",branch:"",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=08050096,02030251,01040670",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:61,kol:"預計3/30~4/5發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:62,kol:"mmoolrlny",type:"REELS短片",fans:"1千～5千",topic:"森系列",pay:"收費",quote:"$2,500",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBNn5PAzy2cxnsk0HQ8kAIxqaG9Dr4wbnzUpbx3PfsHYyGqs0zvtTT86VvSzTAQ",status:"已結案",owner:"慧君",products:"01161051 輕盈雅緻造型上衣M橄欖綠\n08020603 假日細緻蕾絲長裙M 黑\n日常俐落純棉好搭背心 (02170039) M白色\n08020607 全腰鬆緊立體抓折氣球裙M粉紫\n06021237 森系列大口袋背心洋裝M 灰藍\n02030251 必備百搭針織外套M白\n交叉美背仙女bra top (01040583) M黑色\n個性條紋西裝吊帶背心 (01040662) M黑\n層次襠片剪接個性長裙 (08020605) M 淺灰\n兩件式絲光肩帶短袖上衣 (01161052) M深咖啡\n視覺顯瘦剪接線牛仔裙 (08050096) M深藍",branch:"NORMCORE",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=01161051,08020603,02170039,08020607,06021237,02030251,01040662,08020605,01161052,08050096",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:63,kol:"chiaofenn",type:"圖文合作",fans:"",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"06021238 液態氨柔挺棉-慵懶綁帶洋裝 靜謐黑 S",branch:"NORMCORE",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:64,kol:"lllz__y",type:"圖文合作",fans:"1千～5千",topic:"26SS 新品(3/23～3/30)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"02030251 白色 M\n08020564 月光藍 S",branch:"",address:"",link:"",effnote:"品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:65,kol:"zhi_ji_7777",type:"圖文合作",fans:"1千～5千",topic:"森系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"01161039液態氨柔挺棉-剛剛好基本T恤（黑+S)\n03050710 森系列水洗軟丹寧氣球褲（淺藍+M)",branch:"MORI",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:66,kol:"ooo.0322",type:"圖文合作",fans:"1千～5千",topic:"森系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"08020533 低調奢華微光澤感豹紋魚尾裙  黑色 L\n01161051 輕盈雅緻造型上衣 綠色M",branch:"MORI",address:"164/52",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:67,kol:"ruby__1117",type:"REELS短片",fans:"1千～5千",topic:"森系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"06021237 S咖+02030251 S卡其\n01161051 S橄欖綠+08020603 S黑色\n01014430 S白色+03021539 S冰川灰\n02060047 白色+03050710 S淺藍色 + 01040583 白色 M",branch:"MORI",address:"",link:"",effnote:"銷售面:轉換率高",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:68,kol:"_ioi0_mo0d_",type:"圖文合作",fans:"1千～5千",topic:"26SS 新品(3/23～3/30)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"抗皺剪接門襟口袋襯衫（01031010）風鈴粉 M\n天絲涼感紋理針織上衣（01051173）銀灰 M\n細緻剪裁工裝裙（08020604）深灰 M",branch:"",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=01031010,01051173,08020604",effnote:"初次合作 / 品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:69,kol:"tzuu_8",type:"圖文合作",fans:"1千～5千",topic:"26SS 新品(3/23～3/30)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"08020604 細緻剪裁工裝裙/深灰M\n01161037 液態氨柔挺棉-花朵袖型T恤/純淨白 M",branch:"",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:70,kol:"yixuan_312",type:"圖文合作",fans:"1千～5千",topic:"26SS 新品(3/23～3/30)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"渲染打折長裙 08020564 月光藍s\n日常領巾造型上衣 01161045 白s",branch:"",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:71,kol:"wxuan.__",type:"圖文合作",fans:"",topic:"26SS 新品(3/23～3/30)",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"03050700淺藍/S\n01031010墨綠/S",branch:"",address:"",link:"",effnote:"初次合作 / 品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:72,kol:"預計3/23~3/29發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:73,kol:"cindychenn7",type:"圖文合作",fans:"1千～5千",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"06021238液態氨柔挺棉-慵懶綁帶洋裝-S：靜謐黑",branch:"NORMCORE",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:74,kol:"mau.s_feeling",type:"REELS短片",fans:"1千～5千",topic:"森系列",pay:"收費",quote:"reels+2則限動$1500",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"01161054 白色 S \n08020603 藍色 L\n01031012 淺藍 S\n08020607 粉 L\n06021237 灰藍 S",branch:"MORI",address:"",link:"",effnote:"上次臉書影片 收益7,943\n本次臉書影片 收益1,280\n合作下來都會有收益 / 銷售面:轉換率高",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:75,kol:"sovywhis",type:"圖文合作",fans:"1千～5千",topic:"森系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"01161051/橄欖綠/S\n08020603/黑色/S",branch:"MORI",address:"",link:"",effnote:"上次臉書貼文 收益1,080\n本次臉書貼文 收益1380\n合作下來都會有收益 / 品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:76,kol:"kellywu.98",type:"圖文合作",fans:"1千～5千",topic:"森系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"06021237  灰藍 / M\n01051108  白色 / M",branch:"MORI",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:77,kol:"_michelle_10969",type:"圖文合作",fans:"1千～5千",topic:"森系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"伊廷",products:"M系列慵懶一字領針織上衣／白色M 01051108\n全腰鬆緊立體抓褶氣球裙／卡其S 08020607",branch:"MORI",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=01051108,08020607",effnote:"初次合作\n收益1,480 / 品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:78,kol:"yuen.21",type:"圖文合作",fans:"1千～5千",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"YURI",products:"02130088 藍S\n03021480\n01161039 純淨白S",branch:"NORMCORE",address:"許華恩\r\n0921267840\r\n高雄市楠梓區援中路996號2樓",link:"",effnote:"品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:79,kol:"預計3/6~3/15發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:80,kol:"eazyuu",type:"圖文合作",fans:"1千～5千",topic:"26SS 新品(3/2～3/16)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"卉珍",products:"3/2 必備百搭針織外套（02030251）卡其色/S\n3/16 寬鬆純棉剪裁上衣（01161032）/白色/S\n3/2 日常好搭經典長褲 （03021531）/黑色M",branch:"",address:"蔡欣妤0983081699\r\n高雄市鼓山區明華路292號3樓",link:"",effnote:"上次臉書貼文 收益$11,967\n本次臉書貼文 收益$1,920\n合作下來都會有收益 / 銷售面:轉換率高",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:81,kol:"noviadream",type:"圖文合作",fans:"1千～5千",topic:"26SS 新品(3/2～3/16)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"卉珍",products:"3/2 時髦光澤感條紋襯衫 （01031005）藍色 S\n3/9 視覺顯瘦剪接線牛仔裙（08050096）煙霧灰 S",branch:"",address:"姓名：呂靜宜\r\n電話：0935698328\r\n地址：台北市內湖區文湖街62號",link:"",effnote:"上次臉書貼文 收益$4,260\n本次臉書貼文 收益$1,870\n合作下來都會有收益 / 銷售面:帶動銷售",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:82,kol:"tzu_hsien08",type:"REELS短片",fans:"1千～5千",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBKwufdO3LaHmZjKFTQnDN6EoSJco9V_Y0LOYtxLVEEF8-XcRTQGSvKjpcMli2o",status:"已結案",owner:"YURI",products:"01161040液態氨柔挺棉-俐落V領T恤\n尺寸：M  顏色：摩卡\n\n01161039液態氨柔挺棉-剛剛好基本T恤 尺寸：S  顏色：白色\n\n01161037液態氨柔挺棉-花朵袖型T恤\n尺寸：S 顏色：黑色\n\n03021276俐落打褶直筒西裝寬褲\n尺寸：S  顏色：黑色\n\n03021276俐落打褶直筒西裝寬褲\n尺寸：S  顏色：白色\n\n03050704 時髦筷子腿彈力開叉丹寧褲 \n尺寸：S 顏色：藍色",branch:"NORMCORE",address:"楊子嫻\n地址：243 新北市泰山區明志路三段510-1號11樓\n電話：0935-325-300",link:"https://www.mo-bo.com.tw/productlist?keyword=01161040,01161039,01161037,03021276,03050704,01161038,03021539,06021238",effnote:"共同投廣 3/16~3/22\n收益$1,680 / 銷售面:帶動銷售",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:83,kol:"ooooh_t",type:"圖文合作",fans:"1千～5千",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"YURI",products:"03021539/冰川灰S\r\n01161039/白S",branch:"NORMCORE",address:"李雨曈/0919952570/高雄市楠梓區鳳楠路98-7號11樓",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:84,kol:"imevachen710",type:"REELS短片",fans:"1萬～3萬",topic:"液態氨柔挺棉",pay:"收費",quote:"$4500",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBIK1A6IgZxujYHAWcp-Hpz7haOHRjYWnEDM1Oh-1l6ydMM7iHCOH4AMqdNHHOg",status:"已結案",owner:"YURI",products:"01161037白M\n08020567淺灰M\n01161039黑M\n03021517深灰M\n01030977白M\n03021539黑M\n06021238黑M",branch:"NORMCORE",address:"姓名：陳怡安\n電話：0912219132\n地址：桃園市桃園區雙峰路51巷1弄2號",link:"https://www.mo-bo.com.tw/productlist?keyword=01161037,08020567,01161039,03021517,01030977,03021539,06021238,01161038,01161040",effnote:"共同投廣 3/10~3/22\n收益$8,850 / 銷售面:轉換率高",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:85,kol:"lys0627_",type:"圖文合作",fans:"1千～5千",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:true,adPartner:true,adCode:"",status:"已結案",owner:"YURI",products:"01161039 白色M \n03021419 淺粉S",branch:"NORMCORE",address:"李咏珊\n0986131852\n台北市信義區信安街168號8樓-12",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:86,kol:"ooo1030ooo",type:"圖文合作",fans:"1千～5千",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"YURI",products:"03050704 S 深藍\n02140071  S深藍\n01161039  S 白",branch:"NORMCORE",address:"吳秉錡\r\n0988811761\r\n新北市汐止區福德一路42號12樓",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:87,kol:"chloee_zz",type:"圖文合作",fans:"1千～5千",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"YURI",products:"01050765優質時尚百搭針織背心  灰s\r\n01161039液態氨柔挺棉-剛剛好基本T恤 白S\r\n03021276俐落打褶直筒西裝寬褲 黑S",branch:"NORMCORE",address:"姓名：王藝蓁\r\n電話：0935015330\r\n地址：台南市永康區永大路二段758號（接待中心）",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:88,kol:"_ciiiii2201",type:"圖文合作",fans:"1千～5千",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"YURI",products:"01161039 白M\r\n02140071 深藍 S\r\n08050095 藍色M",branch:"NORMCORE",address:"饒芳慈0905515682 \r\n116台北市文山區木新路三段163號4樓",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:89,kol:"yuching330",type:"圖文合作",fans:"5千～1萬",topic:"液態氨柔挺棉",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"YURI",products:"01161037液態氨柔挺棉-花朵袖型T恤（白色S號）\n0214007仿舊水洗感側開叉丹寧外套（淺藍S號）\n03010363挺感斜紋布純棉短褲(白色S號）",branch:"NORMCORE",address:"收件姓名：蘇渝晴\r\n聯絡電話：0975-572908\r\n收件地址：（郵遞區號500）彰化縣彰化市博愛街133號",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:90,kol:"alysoonlin",type:"REELS短片",fans:"1千～5千",topic:"丹寧系列-勤美\n2/25 14:00",pay:"收費",quote:"Reels$500\n一個月廣告投放",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBHnQpleLA7FpMRWOi-3WKXbU-WU7Pn0ltrGgemQeXFNmo7nKfFRziteLkdS8D0",status:"已結案",owner:"慧君",products:"03100006 淺卡其M\n03100002 粉 M\n03050704 藍S\n03010368 酒紅M\n02050075 卡其M\n01160985 深灰S",branch:"",address:"",link:"",effnote:"品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:91,kol:"159_style",type:"REELS短片",fans:"1千～5千",topic:"丹寧系列",pay:"收費",quote:"$1,500(含合作投廣)",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBEff0hqoNv5_t5RlOh5xa8XMSCd-wufnp-lk2rv12srxlk9JVWTEhMJOGRJpeY",status:"已結案",owner:"慧君",products:"02140071 仿舊水洗感側開叉丹寧外套M深藍\n01110266 窗花肩帶綁繩上衣Ｍ白\n03050706 酷酷女生丹寧膝下褲M 淺藍\n01051169 正反兩穿針織兩件式上衣M 白色\n08050095 水洗刷色A襬丹寧裙M藍色\n01160968 清醒夢剪破設計寬鬆上衣 M 白色",branch:"",address:"",link:"",effnote:"品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:92,kol:"fdsunn",type:"REELS短片",fans:"1千～5千",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:false,adPartner:true,adCode:"adcode-Q9jTBBK4H4VTm6FKQj-msHskVyn_4vqlbvL5iXPMVjSTpDbZb6WxQFWLJGWIBinaTac",status:"已結案",owner:"慧君",products:"01110266 窗花肩帶綁繩上衣 黑 S\n03050704 時髦筷子腿彈力開叉丹寧褲 深藍L\n08070016 後腰鬆緊圓點裙 白色 剩XS\n\n01040564 皺皺布層次感V領背心 白色M\n03021538 斜紋水洗棉彎刀褲 黑M\n\n01040613透氣親膚蕾絲點綴bra top 白S/ 淺灰M\n01160985 莫代爾微立領蓋袖上衣 深灰M\n03050706 酷酷女生丹寧膝下褲 深藍M\n\n08050095 水洗刷色A襬丹寧裙 藍色L",branch:"",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:93,kol:"預計2/23~3/5發布",type:"",fans:"",topic:"",pay:"",quote:"",adAuth:false,adPartner:false,adCode:"",status:"",owner:"",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:94,kol:"amy__diary",type:"REELS短片",fans:"1千～5千",topic:"丹寧系列-新埔\n2/15 14:00",pay:"互惠",quote:"5-6件公關品",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBEluZwEtX1t8PBQw8DS1R4hx0jGX2umHK2s6kRxLimN2zB0oO1rDnfKkDffTGU",status:"已結案",owner:"慧君",products:"03021390 完美修飾繭型打褶西裝褲 深灰藍L\r\n02140071仿舊水洗感側開叉丹寧外套 深藍M\r\n06021235 質感紋路肩帶開衩洋裝卡其S\r\n01160742 假兩件撞色坑條上衣 黑 L\r\n08020550後開衩質感蕾絲裙 紫 M\r\n01031003 馬賽克立體紋扭結襯衫 黑L",branch:"",address:"",link:"",effnote:"共同投廣 \n收益$1,422 / 品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:95,kol:"zyee7",type:"REELS短片",fans:"1千～5千",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:false,adPartner:true,adCode:"adcode-Q9jTBBG3XGpKZKGRZMP6Krv8t4OqK4h9WroYAKgj7-MD_z5Vgon_ghwoc_kD6L0O6aA",status:"已結案",owner:"慧君",products:"·03050706 / 酷酷女生丹寧膝下褲 #深藍色 M\n·03021538 / 斜紋水洗棉彎刀褲 #黑色 M\n·08050095 / 水洗刷色A襬丹寧裙 #藍色M\n·01014114 / 細柔棉羅紋抽皺造型上衣 #咖色 S\n·01051092 / 輕柔雲朵兩件式針織外套 #黑色 S\n01050976 薩哈拉沙漠針織衫S",branch:"",address:"曾以祈\r\n0938679808 \r\n新北市新店區中山路137號 14樓之 7",link:"",effnote:"品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:96,kol:"chili.kg",type:"圖文合作",fans:"1萬～3萬",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:false,adPartner:true,adCode:"adcode-Q9jTBBKhjReGiyHixbdZPlDRlo_L8MWtPyqKSGxt5Xa3uAY-qbDbOVOmtsHzZtaLkzM",status:"已結案",owner:"慧君",products:"03021538 / 斜紋水洗棉彎刀褲 黑色  S\n02140071 仿舊水洗感側開叉丹寧外套 深藍 S\n01040582 舒適包覆美背雙肩帶bra top 白 S",branch:"",address:"陳亦詩\n0913890406\n新北市五股區新五路三段332號13樓",link:"",effnote:"品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:97,kol:"maggie_m.e17",type:"圖文合作",fans:"1千～5千",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"03050706 酷酷女生丹寧膝下褲 m 深藍\n01160868 條紋polo柔軟上衣 s 乾燥粉",branch:"",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:98,kol:"jia__31",type:"圖文合作",fans:"1千～5千",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"-03021538/泥杏灰/M\n-01031003/白色/S\n-01051096/淺藍/M",branch:"",address:"姓名：林佳徵/電話：0988850036/地址：台中市西區貴和街30號6F（管理員代收)",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:99,kol:"jeannnie915",type:"REELS短片",fans:"1千～5千",topic:"丹寧系列",pay:"收費",quote:"$2500",adAuth:true,adPartner:true,adCode:"adcode-Q9jTBBFLpmMnkjH7n9CsO_yjmCToM8TAESoX0OovF3L3t8oP9GYZwioWufvnAWLuu0k",status:"已結案",owner:"慧君",products:"02140071 仿舊水洗感側開叉丹寧外套 淺藍 M\n03050701 立體剪裁刷色丹寧褲 藍色 S\n01160968 清醒夢剪破設計寬鬆上衣 白 S\n\n03021538 斜紋水洗棉彎刀褲 黑 S\n01040583 交叉美背仙女bra top 黑 S\n02030236 透明邊設計感針織外套 黑 S\n\n01110266 窗花肩帶綁繩上衣 白 S\n\n01051096 透明邊設計感針織背心 淺藍 S\n02030236 透明邊設計感針織外套 淺藍 S\n03050701 立體剪裁刷色丹寧褲 深藍 S\n\n03050704 時髦筷子腿彈力開叉丹寧褲 深藍 S",branch:"",address:"馮子芸 0976261879\n新北市新莊區中央路475號7樓",link:"",effnote:"品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:100,kol:"a_fu_7",type:"圖文合作",fans:"1千～5千",topic:"26SS 新品(3/2～3/16)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"卉珍",products:"(3/19已補寄)3/16 設計腰頭寬版西裝長褲 03021546 S/黑\n3/9 紐結設計涼感顯瘦上衣 01014412 S/暗紅\n3/16 個性條紋西裝吊帶背心 01040662 S/黑",branch:"",address:"劉怡姍0967070207\n7-11輔大門市\n門市地址：242新北市新莊區中正路516-1號",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:101,kol:"chi__ckennnnn1115",type:"圖文合作",fans:"1千～5千",topic:"26SS 新品(3/2～3/16)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"卉珍",products:"3/9 百搭質感親膚抽皺上衣 (01014415) / 紅色 S\n3/2 日常好搭經典長褲 （03021531）/ 黑色 S",branch:"",address:"",link:"",effnote:"臉書貼文 收益$6,088\n合作下來都會有收益 / 銷售面:轉換率高",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:102,kol:"thisisann6601",type:"圖文合作",fans:"5千～1萬",topic:"26SS 新品(3/2～3/16)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"卉珍",products:"3/9 視覺顯瘦剪接線牛仔裙 (08050096)  S 煙霧灰\n3/2 丹寧個性水洗口袋襯衫 (01031011)  S 礦物粉\n3/2 日常鬆弛感針織上衣 (01051167)  S 灰色",branch:"",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:103,kol:"hann__huang",type:"圖文合作",fans:"5千～1萬",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"卉珍",products:"01161028 細緻荷葉A襬上衣 白/M\n03050704 時髦筷子腿彈力開叉丹寧褲 藍色/S\n02140071 仿舊水洗感側開叉丹寧外套 淺藍/M",branch:"",address:"黃語涵\r\n0932104571\r\n桃園市中壢區龍東路29巷28弄4號",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:104,kol:"chenghua34",type:"圖文合作",fans:"5千～1萬",topic:"26SS 新品(3/2～3/16)",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"卉珍",products:"3/2 丹寧個性水洗口袋襯衫 (01031011) 迷霧灰 M \n3/2 MIT特殊剪裁長洋裝 (06021242) 卡其綠 M",branch:"",address:"台北市中正區詔安街24號2樓\r\n蔣承樺 0975060934",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:105,kol:"_shu_a",type:"圖文合作",fans:"1千～5千",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"03021538 斜紋水洗棉彎刀褲 泥杏灰/M\n01160968清醒夢剪破設計寬鬆上衣 白色/S\n02140071 仿舊水洗感側開叉丹寧外套 深藍/S",branch:"",address:"吳家誼\n0973475766\n台南市仁德區德崙路21巷36號11樓之7",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:106,kol:"rin.215_",type:"限動合作",fans:"5萬～10萬",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"03050704/深藍色/S",branch:"",address:"星發現娛樂股份有限公司\n地址：106台北市大安區敦化南路二段172巷5弄2號2樓\n\n聯絡人：楊振鋒 YONG JENFUNG（轉：Rin）\n電話：0988295407",link:"",effnote:"品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:107,kol:"ynnus_ma_i",type:"限動合作",fans:"1萬～3萬",topic:"丹寧系列",pay:"互惠",quote:"投廣一週$1000",adAuth:false,adPartner:true,adCode:"adcode-Q9jTBBFETNDJDkq-43cnCRCmp2zMzqe-Asx-hyohBWOhdRwFz49BaRW0DT8-vHmvNls",status:"已結案",owner:"慧君",products:"01030974 不對稱設計感抽繩襯衫 白s\n03050704 時髦筷子腿彈力開叉丹寧褲 深藍s\n02140071 仿舊水洗感側開叉丹寧外套  深藍s",branch:"",address:"",link:"https://www.mo-bo.com.tw/productlist?keyword=01030974,03050704,02140071,06021239,01051169,02170040,03050706,08050095",effnote:"臉書貼文 收益$1,580 / 品牌面:提高觸及",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:108,kol:"yun860420",type:"圖文合作",fans:"1千～5千",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"03050701 立體剪裁刷色丹寧褲 深藍S\n卡其S 01051096\n黑S 02030237",branch:"",address:"",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
+  {id:109,kol:"cc_jnnny",type:"圖文合作",fans:"1千～5千",topic:"丹寧系列",pay:"互惠",quote:"",adAuth:true,adPartner:false,adCode:"",status:"已結案",owner:"慧君",products:"03021538 斜紋水洗棉彎刀褲 S黑\n01040583 交叉美背仙女bra top S黑",branch:"",address:"陳綵晨 0903760266\n台北市北投區溫泉路68巷一號5樓",link:"",effnote:"品牌面:質感SNAP",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''}
+];
+
+// ── State ──
+let data = [];
+let nextId = 1;
+let flt  = {status:'',type:'',pay:'',owner:'',ad:''};
+let search='', period='all', rangeFrom='', rangeTo='';
+let sortKey='id', sortAsc=false;
+let editingRow = null;
+
+// ── Banner ──
+function banner(msg, ok=true){
+  const el = document.getElementById('sync-banner');
+  el.textContent = msg;
+  el.style.background = ok ? '#eaf3de' : '#faeeda';
+  el.style.color = ok ? '#27500a' : '#633806';
+  el.style.border = '1px solid ' + (ok ? '#b8d99a' : '#e8c87a');
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), 4000);
+}
+
+function hideOverlay(){
+  const el=document.getElementById('loading-overlay');
+  if(el) el.classList.add('hide');
+}
+
+// ── Firebase 即時監聽 ──
+function startRealtimeSync(){
+  const colRef = collection(db, COL);
+  onSnapshot(colRef, (snapshot) => {
+    if(snapshot.empty){
+      uploadSeed();
+      return;
+    }
+    data = snapshot.docs.map(d => d.data());
+    data.sort((a,b) => (b.id||0) - (a.id||0));
+    nextId = Math.max(...data.map(d=>d.id||0), 0) + 1;
+    hideOverlay();
+    buildSidebar();
+    render();
+  }, (err) => {
+    banner('連線失敗：'+err.message, false);
+    hideOverlay();
+  });
+}
+
+async function uploadSeed(){
+  banner('首次使用，上傳初始資料中…', true);
+  for(const row of SEED){
+    await setDoc(doc(db, COL, String(row.id)), row);
+  }
+  banner('✓ 初始資料上傳完成', true);
+}
+
+async function saveRowToFirebase(row){
+  try{
+    await setDoc(doc(db, COL, String(row.id)), row);
+    banner('✓ 已同步至資料庫');
+  }catch(e){
+    banner('⚠ 同步失敗：'+e.message, false);
+    console.error('save error', e);
+  }
+}
+
+async function delRowFromFirebase(id){
+  try{
+    await deleteDoc(doc(db, COL, String(id)));
+    banner('✓ 已刪除');
+  }catch(e){
+    banner('⚠ 刪除失敗：'+e.message, false);
+  }
+}
+
+// ── Tags ──
+function typeTag(t){
+  const m={圖文合作:'t-blue',REELS短片:'t-pink',Threads:'t-green',YT影片:'t-amber',限動合作:'t-gray',抽獎合作:'t-gray'};
+  return t?`<span class="tag ${m[t]||'t-gray'}">${t}</span>`:'';
+}
+function payTag(p){ return p==='收費'?'<span class="tag t-amber">收費</span>':'<span class="tag t-green">互惠</span>'; }
+function adTag(v){ return v?'<span class="tag t-green">✓ 有</span>':'<span class="tag t-red">✗ 無</span>'; }
+function statusTag(s){
+  const m={已結案:'t-green',KOL拍攝中:'t-amber',KOL洽談中:'t-blue'};
+  return s?`<span class="tag ${m[s]||'t-gray'}">${s}</span>`:'';
+}
+function postIcon(u){
+  if(!u) return '';
+  if(u.includes('instagram')) return '📷';
+  if(u.includes('youtube')||u.includes('youtu.be')) return '▶️';
+  if(u.includes('tiktok')) return '🎵';
+  if(u.includes('threads')) return '🧵';
+  return '🔗';
+}
+function fmtCost(q){
+  if(!q&&q!==0) return '—';
+  const m=String(q).match(/[0-9,]+/);
+  if(m){ const n=parseInt(m[0].replace(/,/g,'')); return '$'+n.toLocaleString(); }
+  return String(q).slice(0,12);
+}
+function roiBadge(d){
+  if(d.revenue==null) return '<span style="color:#ccc">—</span>';
+  const cost=parseInt(String(d.quote||'0').replace(/[^0-9]/g,'')||0);
+  if(!cost) return d.revenue>0?'<span style="color:#27500a;font-weight:500">$'+d.revenue.toLocaleString()+'</span>':'<span style="color:#ccc">—</span>';
+  const roi=(d.revenue/cost).toFixed(1);
+  const col=roi>=3?'#27500a':roi>=1?'#2d4a3e':'#8a1a1a';
+  return `<span style="color:${col};font-weight:500">${roi}x</span>`;
+}
+function fmtDate(s){
+  if(!s) return '—';
+  try{ const d=new Date(s); return isNaN(d)?s:d.toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}); }catch(e){ return s; }
+}
+function normDate(s){
+  if(!s) return '';
+  try{ const d=new Date(s); return isNaN(d.getTime())?String(s).slice(0,10):d.toISOString().slice(0,10); }catch(e){ return ''; }
+}
+
+// ── Filtering ──
+function getFiltered(){
+  return data.filter(d=>{
+    if(flt.status && d.status!==flt.status) return false;
+    if(flt.type   && d.type!==flt.type)     return false;
+    if(flt.pay    && d.pay!==flt.pay)        return false;
+    if(flt.owner  && d.owner!==flt.owner)    return false;
+    if(flt.ad==='yes' && !d.adAuth)  return false;
+    if(flt.ad==='no'  &&  d.adAuth)  return false;
+    if(search){
+      const q=search.toLowerCase();
+      if(![d.kol,d.topic,d.owner,d.orderNo,d.products].some(s=>String(s||'').toLowerCase().includes(q))) return false;
+    }
+    if(d.date && period!=='all'){
+      const dt=new Date(d.date), now=new Date();
+      if(period==='week'){
+        const s=new Date(now); s.setDate(now.getDate()-now.getDay()+1); s.setHours(0,0,0,0);
+        const e=new Date(s); e.setDate(s.getDate()+6); e.setHours(23,59,59,999);
+        if(dt<s||dt>e) return false;
+      } else if(period==='month'){
+        if(dt.getFullYear()!==now.getFullYear()||dt.getMonth()!==now.getMonth()) return false;
+      } else if(period==='custom'){
+        if(rangeFrom && dt<new Date(rangeFrom)) return false;
+        if(rangeTo   && dt>new Date(rangeTo+'T23:59:59')) return false;
+      }
+    }
+    return true;
+  });
+}
+
+// ── Sidebar ──
+function buildSidebar(){
+  function grp(id, key, opts){
+    const cnt={};
+    data.forEach(d=>{ const v=d[key]||''; cnt[v]=(cnt[v]||0)+1; });
+    const cur=flt[key]||'';
+    document.getElementById(id).innerHTML=
+      `<button class="fb ${cur===''?'on':''}" data-key="${key}" data-val="">全部 <span class="c">${data.length}</span></button>`+
+      opts.map(v=>`<button class="fb ${cur===v?'on':''}" data-key="${key}" data-val="${v}">${v} <span class="c">${cnt[v]||0}</span></button>`).join('');
+  }
+  grp('sb-status','status',['KOL洽談中','KOL拍攝中','等待商品寄出','已結案']);
+  grp('sb-type','type',['圖文合作','REELS短片','Threads','YT影片','限動合作','抽獎合作']);
+  grp('sb-pay','pay',['互惠','收費']);
+  const owners=[...new Set(data.map(d=>d.owner).filter(Boolean))].sort();
+  const ocnt={}; data.forEach(d=>{ if(d.owner) ocnt[d.owner]=(ocnt[d.owner]||0)+1; });
+  const curO=flt.owner||'';
+  document.getElementById('sb-owner').innerHTML=
+    `<button class="fb ${curO===''?'on':''}" data-key="owner" data-val="">全部 <span class="c">${data.length}</span></button>`+
+    owners.map(v=>`<button class="fb ${curO===v?'on':''}" data-key="owner" data-val="${v}">${v} <span class="c">${ocnt[v]||0}</span></button>`).join('');
+  const curAd=flt.ad||'';
+  document.getElementById('sb-ad').innerHTML=
+    `<button class="fb ${curAd===''?'on':''}" data-key="ad" data-val="">全部</button>`+
+    `<button class="fb ${curAd==='yes'?'on':''}" data-key="ad" data-val="yes">有授權 <span class="c">${data.filter(d=>d.adAuth).length}</span></button>`+
+    `<button class="fb ${curAd==='no'?'on':''}" data-key="ad" data-val="no">無授權 <span class="c">${data.filter(d=>!d.adAuth).length}</span></button>`;
+
+  document.querySelectorAll('.fb').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const key=btn.dataset.key, val=btn.dataset.val;
+      if(key==='ad') flt.ad=val; else flt[key]=val;
+      document.querySelectorAll(`.fb[data-key="${key}"]`).forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      render();
+    });
+  });
+}
+
+// ── Render table ──
+function render(){
+  const rows = getFiltered();
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+
+  // Stats
+  const totalCost = rows.reduce((s,d)=>s+(d.pay==='收費'?parseInt(String(d.quote||'0').replace(/[^0-9]/g,'')||0):0),0);
+  const totalRev  = rows.reduce((s,d)=>s+(Number(d.revenue)||0),0);
+  const roi = totalCost>0?(totalRev/totalCost).toFixed(2)+'x':'—';
+  document.getElementById('stats').innerHTML=
+    `<span>顯示 <strong>${rows.length}</strong> 筆</span>`+
+    `<span>付費 <strong>${rows.filter(d=>d.pay==='收費').length}</strong> 筆</span>`+
+    `<span>總費用 <strong style="color:#633806">${totalCost>0?'$'+totalCost.toLocaleString():'—'}</strong></span>`+
+    `<span>總收益 <strong style="color:#27500a">${totalRev>0?'$'+totalRev.toLocaleString():'—'}</strong></span>`+
+    `<span>整體ROI <strong style="color:#2d4a3e">${roi}</strong></span>`+
+    `<span>廣告授權 <strong>${rows.filter(d=>d.adAuth).length}</strong></span>`+
+    `<span>REELS <strong>${rows.filter(d=>d.type==='REELS短片').length}</strong></span>`;
+
+  if(!rows.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  tbody.innerHTML = rows.map((d,i)=>{
+    const nd = normDate(d.date);
+    return `<tr>
+      <td><a class="kol-link" href="https://www.instagram.com/${d.kol}/" target="_blank">@${d.kol}</a></td>
+      <td>${typeTag(d.type)}</td>
+      <td style="font-size:11px;color:#7a7670;font-family:monospace">${d.fans||'—'}</td>
+      <td style="color:#7a7670">${d.topic||'—'}</td>
+      <td>${payTag(d.pay)}</td>
+      <td>${adTag(d.adAuth)}</td>
+      <td>
+        <select class="il" style="font-size:12px" data-idx="${i}">
+          ${['KOL洽談中','KOL拍攝中','等待商品寄出','已結案'].map(v=>`<option ${d.status===v?'selected':''}>${v}</option>`).join('')}
+        </select>
+      </td>
+      <td style="font-size:11px;color:#7a7670;font-family:monospace">${nd||'—'}</td>
+      <td style="text-align:center">${d.postLink?`<a href="${d.postLink}" target="_blank" style="color:#2d4a3e;text-decoration:none;font-size:12px;background:#eaf3de;border-radius:5px;padding:2px 8px">${postIcon(d.postLink)} 查看</a>`:'<span style="color:#ddd">—</span>'}</td>
+      <td style="text-align:right;font-family:monospace;font-size:12px">${d.quote?'<span style="color:#633806">'+fmtCost(d.quote)+'</span>':'<span style="color:#ccc">—</span>'}</td>
+      <td style="text-align:right;font-family:monospace;font-size:12px">${d.revenue!=null?'<span style="color:#27500a;font-weight:500">$'+Number(d.revenue).toLocaleString()+'</span>':'<span style="color:#ccc">—</span>'}</td>
+      <td style="text-align:right">${roiBadge(d)}</td>
+      <td style="display:flex;gap:4px;align-items:center">
+        <button class="btn" style="height:26px;padding:0 8px;font-size:14px" data-idx="${i}" data-act="detail">🔍</button>
+        <button class="btn" style="height:26px;padding:0 8px;font-size:11px" data-idx="${i}" data-act="edit">編輯</button>
+        <button class="btn btn-d" style="height:26px;padding:0 8px;font-size:11px" data-idx="${i}" data-act="del">刪除</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Status inline change
+  tbody.querySelectorAll('select[data-idx]').forEach(sel=>{
+    sel.addEventListener('change',()=>{
+      const row = rows[parseInt(sel.dataset.idx)];
+      if(row){ row.status=sel.value;  saveRowToSheets(row); buildSidebar(); }
+    });
+  });
+
+  // Action buttons - use data-idx to get the exact row object
+  tbody.querySelectorAll('button[data-act]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const row = rows[parseInt(btn.dataset.idx)];
+      if(!row) return;
+      const act = btn.dataset.act;
+      if(act==='detail') openDetail(row);
+      else if(act==='edit') openEditForm(row);
+      else if(act==='del'){
+        if(confirm('確定要刪除 @'+row.kol+' 嗎？')){
+          data = data.filter(d=>d!==row);
+           delRowFromFirebase(row.id);
+          buildSidebar(); render();
+        }
+      }
+    });
+  });
+}
+
+// ── Detail ──
+function openDetail(d){
+  document.getElementById('det-kol').textContent='@'+d.kol;
+  document.getElementById('det-body').innerHTML=`
+    <div class="d-sec">基本資訊</div>
+    <div class="d-row"><span class="d-key">合作形式</span><span class="d-val">${typeTag(d.type)}</span></div>
+    <div class="d-row"><span class="d-key">粉絲數</span><span class="d-val">${d.fans||'—'}</span></div>
+    <div class="d-row"><span class="d-key">主題</span><span class="d-val">${d.topic||'—'}</span></div>
+    <div class="d-row"><span class="d-key">費用</span><span class="d-val">${payTag(d.pay)} ${d.quote?'<span style="color:#7a7670;font-size:12px">'+d.quote+'</span>':''}</span></div>
+    <div class="d-row"><span class="d-key">廣告授權</span><span class="d-val">${adTag(d.adAuth)}</span></div>
+    <div class="d-row"><span class="d-key">狀態</span><span class="d-val">${statusTag(d.status)}</span></div>
+    <div class="d-row"><span class="d-key">負責人</span><span class="d-val">${d.owner||'—'}</span></div>
+    <div class="d-row"><span class="d-key">合作日期</span><span class="d-val">${fmtDate(d.date)}</span></div>
+    <div class="d-row"><span class="d-key">訂單編號</span><span class="d-val" style="font-family:monospace">${d.orderNo||'—'}</span></div>
+    ${d.adCode?`<div class="d-row"><span class="d-key">廣告主代碼</span><span class="d-val" style="font-family:monospace;font-size:11px">${d.adCode}</span></div>`:''}
+    <div class="d-sec">挑選單品</div>
+    <div class="pbox">${d.products||'（無挑品紀錄）'}</div>
+    ${d.postLink?`<div class="d-sec">合作內容連結</div><div class="d-row"><a href="${d.postLink}" target="_blank" style="color:#2d4a3e;word-break:break-all">${postIcon(d.postLink)} ${d.postLink}</a></div>`:''}
+    ${d.link?`<div class="d-sec">商品連結</div><div class="d-row"><a href="${d.link}" target="_blank" style="color:#0c447c;word-break:break-all">${d.link}</a></div>`:''}
+    ${d.address?`<div class="d-sec">寄件資訊</div><div class="pbox">${d.address}</div>`:''}
+    <div class="d-sec">合作成效</div>
+    <div class="eff-grid">
+      ${['觸及人數','互動數','點擊數','新增粉絲','銷售件數'].map((lbl,i)=>{
+        const vals=[d.reach,d.engage,d.clicks,d.newfans,d.units];
+        const v=vals[i];
+        return `<div class="eff-card"><div class="eff-num">${v!=null?Number(v).toLocaleString():'—'}</div><div class="eff-lbl">${lbl}</div></div>`;
+      }).join('')}
+      <div class="eff-card"><div class="eff-num" style="${d.revenue?'color:#27500a':''}">${d.revenue!=null?'$'+Number(d.revenue).toLocaleString():'—'}</div><div class="eff-lbl">銷售收益</div></div>
+    </div>
+    ${d.reach&&d.engage?`<div class="d-row"><span class="d-key">互動率</span><span class="d-val" style="font-weight:500;color:#2d4a3e">${(d.engage/d.reach*100).toFixed(2)}%</span></div>`:''}
+    ${d.effnote?`<div class="d-row"><span class="d-key">成效備註</span><span class="d-val" style="color:#7a7670">${d.effnote}</span></div>`:''}
+  `;
+  document.getElementById('det-edit-btn').onclick=()=>{ closeDetail(); openEditForm(d); };
+  document.getElementById('det-del-btn').onclick=()=>{
+    if(confirm('確定要刪除 @'+d.kol+' 嗎？')){
+      data=data.filter(x=>x!==d);  delRowFromFirebase(d.id);
+      buildSidebar(); render(); closeDetail();
+    }
+  };
+  document.getElementById('detail-wrap').classList.add('open');
+}
+function closeDetail(){ document.getElementById('detail-wrap').classList.remove('open'); }
+
+// ── Edit / Add form ──
+function openEditForm(d){
+  editingRow = d;
+  document.getElementById('form-title').textContent='編輯合作';
+  document.getElementById('f-kol').value      = d.kol||'';
+  document.getElementById('f-type').value     = d.type||'圖文合作';
+  document.getElementById('f-fans').value     = d.fans||'';
+  document.getElementById('f-pay').value      = d.pay||'互惠';
+  document.getElementById('f-topic').value    = d.topic||'';
+  document.getElementById('f-owner').value    = d.owner||'';
+  document.getElementById('f-quote').value    = d.quote||'';
+  document.getElementById('f-adAuth').value   = d.adAuth?'1':'0';
+  document.getElementById('f-status').value   = d.status||'KOL洽談中';
+  document.getElementById('f-date').value     = normDate(d.date);
+  document.getElementById('f-products').value = d.products||'';
+  document.getElementById('f-postlink').value = d.postLink||'';
+  document.getElementById('f-link').value     = d.link||'';
+  document.getElementById('f-order').value    = d.orderNo||'';
+  document.getElementById('f-address').value  = d.address||'';
+  document.getElementById('f-reach').value    = d.reach!=null?d.reach:'';
+  document.getElementById('f-engage').value   = d.engage!=null?d.engage:'';
+  document.getElementById('f-clicks').value   = d.clicks!=null?d.clicks:'';
+  document.getElementById('f-newfans').value  = d.newfans!=null?d.newfans:'';
+  document.getElementById('f-units').value    = d.units!=null?d.units:'';
+  document.getElementById('f-revenue').value  = d.revenue!=null?d.revenue:'';
+  document.getElementById('f-adcode').value   = d.adCode||'';
+  document.getElementById('f-effnote').value  = d.effnote||'';
+  document.getElementById('form-wrap').classList.add('open');
+}
+
+function openAddForm(){
+  editingRow = null;
+  document.getElementById('form-title').textContent='新增合作';
+  ['f-kol','f-topic','f-owner','f-quote','f-products','f-postlink','f-link','f-order','f-address','f-reach','f-engage','f-clicks','f-newfans','f-units','f-revenue','f-adcode','f-effnote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-type').value='圖文合作';
+  document.getElementById('f-fans').value='';
+  document.getElementById('f-pay').value='互惠';
+  document.getElementById('f-adAuth').value='0';
+  document.getElementById('f-status').value='KOL洽談中';
+  document.getElementById('f-date').value='';
+  document.getElementById('form-wrap').classList.add('open');
+}
+
+function closeForm(){ document.getElementById('form-wrap').classList.remove('open'); editingRow=null; }
+
+function num(id){ const v=document.getElementById(id).value; return v?parseInt(v):null; }
+
+function saveForm(){
+  const kol = document.getElementById('f-kol').value.trim();
+  if(!kol){ alert('請填入 KOL 帳號'); return; }
+
+  const vals = {
+    kol:      kol.replace('@',''),
+    type:     document.getElementById('f-type').value,
+    fans:     document.getElementById('f-fans').value,
+    pay:      document.getElementById('f-pay').value,
+    topic:    document.getElementById('f-topic').value,
+    owner:    document.getElementById('f-owner').value,
+    quote:    document.getElementById('f-quote').value,
+    adAuth:   document.getElementById('f-adAuth').value==='1',
+    adPartner:false,
+    adCode:   document.getElementById('f-adcode').value||'',
+    status:   document.getElementById('f-status').value,
+    products: document.getElementById('f-products').value,
+    postLink: document.getElementById('f-postlink').value||null,
+    link:     document.getElementById('f-link').value,
+    orderNo:  document.getElementById('f-order').value,
+    address:  document.getElementById('f-address').value,
+    date:     document.getElementById('f-date').value||null,
+    reach:    num('f-reach'), engage: num('f-engage'), clicks: num('f-clicks'),
+    newfans:  num('f-newfans'), units: num('f-units'), revenue: num('f-revenue'),
+    effnote:  document.getElementById('f-effnote').value,
+    branch:   '',
+  };
+
+  if(editingRow){
+    // Update in place - mutate the existing object
+    Object.assign(editingRow, vals);
+    saveRowToFirebase(editingRow);
+  } else {
+    const newRow = { id: nextId++, ...vals };
+    data.unshift(newRow);
+    saveRowToFirebase(newRow);
+  }
+  
+  closeForm();
+  buildSidebar();
+  render();
+}
+
+// ── Export / Import ──
+document.getElementById('btn-export').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='KOL備份_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  banner('✓ 已匯出 '+data.length+' 筆');
+});
+document.getElementById('btn-import').addEventListener('click',()=>document.getElementById('file-import').click());
+document.getElementById('file-import').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const imp=JSON.parse(ev.target.result);
+      if(!Array.isArray(imp)) throw new Error('格式錯誤');
+      if(!confirm('確定匯入 '+imp.length+' 筆？這會取代目前資料。')) return;
+      data=imp;  buildSidebar(); render();
+      banner('✓ 已匯入 '+data.length+' 筆');
+    }catch(err){ alert('匯入失敗：'+err.message); }
+    e.target.value='';
+  };
+  r.readAsText(f);
+});
+
+// ── Other buttons ──
+document.getElementById('btn-add').addEventListener('click', openAddForm);
+document.getElementById('save-form').addEventListener('click', saveForm);
+document.getElementById('cancel-form').addEventListener('click', closeForm);
+document.getElementById('close-form').addEventListener('click', closeForm);
+document.getElementById('close-detail').addEventListener('click', closeDetail);
+document.getElementById('close-detail2').addEventListener('click', closeDetail);
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  flt={status:'',type:'',pay:'',owner:'',ad:''};
+  period='all'; rangeFrom=''; rangeTo='';
+  search=''; document.getElementById('search').value='';
+  document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelector('.time-btn[data-p="all"]').classList.add('on');
+  document.getElementById('custom-range').style.display='none';
+  buildSidebar(); render();
+});
+document.getElementById('search').addEventListener('input',e=>{ search=e.target.value.trim(); render(); });
+
+// Time buttons
+const timeStyle=document.createElement('style');
+timeStyle.textContent='.time-btn.on{background:#2d4a3e!important;color:#fff!important}';
+document.head.appendChild(timeStyle);
+document.querySelectorAll('.time-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    period=btn.dataset.p;
+    document.querySelectorAll('.time-btn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    document.getElementById('custom-range').style.display=period==='custom'?'flex':'none';
+    render();
+  });
+});
+document.getElementById('range-from').addEventListener('change',e=>{ rangeFrom=e.target.value; render(); });
+document.getElementById('range-to').addEventListener('change',e=>{ rangeTo=e.target.value; render(); });
+
+// Close modals on backdrop click
+document.getElementById('form-wrap').addEventListener('click',e=>{ if(e.target===document.getElementById('form-wrap')) closeForm(); });
+document.getElementById('detail-wrap').addEventListener('click',e=>{ if(e.target===document.getElementById('detail-wrap')) closeDetail(); });
+
+// Sync menu
+document.getElementById('btn-sync').addEventListener('click',e=>{
+  e.stopPropagation();
+  const m=document.getElementById('sync-menu');
+  m.style.display=m.style.display==='none'?'block':'none';
+});
+document.querySelectorAll('.sync-opt').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.getElementById('sync-menu').style.display='none';
+    if(el.dataset.act==='pull') banner("資料已即時同步，無需手動拉取");
+    else if(el.dataset.act==='push'){ uploadSeed(); }
+  });
+});
+document.addEventListener('click',e=>{ if(!e.target.closest('#sync-wrap')) document.getElementById('sync-menu').style.display='none'; });
+
+// ── Init ──
+document.getElementById('hd-date').textContent='更新：'+new Date().toLocaleDateString('zh-TW');
+startRealtimeSync();
+</script>
+</body>
+</html>
