@@ -152,11 +152,11 @@ tr:hover td{background:#faf9f6}
           <th>費用</th>
           <th>廣告授權</th>
           <th>狀態</th>
-          <th>合作日期</th>
+          <th data-sort="date" style="cursor:pointer;user-select:none">合作日期 <span class="sort-icon" data-col="date">⇅</span></th>
           <th>合作內容</th>
-          <th style="text-align:right">合作費用</th>
-          <th style="text-align:right">銷售收益</th>
-          <th style="text-align:right">ROI</th>
+          <th data-sort="quote" style="text-align:right;cursor:pointer;user-select:none">合作費用 <span class="sort-icon" data-col="quote">⇅</span></th>
+          <th data-sort="revenue" style="text-align:right;cursor:pointer;user-select:none">銷售收益 <span class="sort-icon" data-col="revenue">⇅</span></th>
+          <th data-sort="roi" style="text-align:right;cursor:pointer;user-select:none">ROI <span class="sort-icon" data-col="roi">⇅</span></th>
           <th>操作</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
@@ -558,7 +558,37 @@ function buildSidebar(){
 
 // ── Render table ──
 function render(){
-  const rows = getFiltered();
+  const filtered = getFiltered();
+
+  // 排序
+  const rows = [...filtered].sort((a,b)=>{
+    let av, bv;
+    if(sortKey==='date'){
+      av = a.date ? new Date(a.date).getTime() : 0;
+      bv = b.date ? new Date(b.date).getTime() : 0;
+    } else if(sortKey==='quote'){
+      av = extractCost(a.quote);
+      bv = extractCost(b.quote);
+    } else if(sortKey==='revenue'){
+      av = Number(a.revenue)||0;
+      bv = Number(b.revenue)||0;
+    } else if(sortKey==='roi'){
+      const costA = extractCost(a.quote); const costB = extractCost(b.quote);
+      av = costA>0 ? (Number(a.revenue)||0)/costA : (Number(a.revenue)||0)>0 ? 999 : 0;
+      bv = costB>0 ? (Number(b.revenue)||0)/costB : (Number(b.revenue)||0)>0 ? 999 : 0;
+    } else {
+      av = a.id||0; bv = b.id||0;
+    }
+    return sortAsc ? av-bv : bv-av;
+  });
+
+  // 更新三角形圖示
+  document.querySelectorAll('.sort-icon').forEach(el=>{
+    const col = el.dataset.col;
+    if(col===sortKey) el.textContent = sortAsc ? '▲' : '▼';
+    else el.textContent = '⇅';
+    el.style.color = col===sortKey ? '#2d4a3e' : '#ccc';
+  });
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
 
@@ -843,6 +873,16 @@ document.querySelectorAll('.sync-opt').forEach(el=>{
   });
 });
 document.addEventListener('click',e=>{ if(!e.target.closest('#sync-wrap')) document.getElementById('sync-menu').style.display='none'; });
+
+// ── 排序表頭點擊 ──
+document.querySelectorAll('th[data-sort]').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const key = th.dataset.sort;
+    if(sortKey===key) sortAsc=!sortAsc;
+    else { sortKey=key; sortAsc=false; }
+    render();
+  });
+});
 
 // ── Init ──
 document.getElementById('hd-date').textContent='更新：'+new Date().toLocaleDateString('zh-TW');
