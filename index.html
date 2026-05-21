@@ -272,7 +272,7 @@ tr:hover td{background:#faf9f6}
 // ── Firebase 設定 ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBqLCElsXA-THZjEIgnQVKutih5ZBQUOaU",
@@ -428,19 +428,25 @@ function hideOverlay(){
 
 // ── 登入登出 ──
 async function login(){
-  try{ await signInWithRedirect(auth, provider); }
-  catch(e){ banner('登入失敗：'+e.message, false); }
+  try{
+    provider.setCustomParameters({ prompt: 'select_account' });
+    await signInWithPopup(auth, provider);
+  } catch(e){
+    if(e.code === 'auth/popup-blocked'){
+      banner('請允許瀏覽器彈出視窗後再試一次', false);
+    } else if(e.code === 'auth/cancelled-popup-request' || e.code === 'auth/popup-closed-by-user'){
+      // 使用者關掉視窗，不顯示錯誤
+    } else {
+      banner('登入失敗：'+e.message, false);
+      console.error('login error:', e);
+    }
+  }
 }
 async function logout(){
   await signOut(auth);
   document.getElementById('app').style.display='none';
   document.getElementById('login-screen').style.display='flex';
 }
-
-// ── 處理登入後的重導向結果 ──
-getRedirectResult(auth).catch(e => {
-  if(e && e.code !== 'auth/null-user') console.error('redirect error:', e.message);
-});
 
 // ── 監聽登入狀態 ──
 onAuthStateChanged(auth, (user)=>{
