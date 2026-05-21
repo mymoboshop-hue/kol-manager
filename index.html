@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KOL 合作管理系統</title>
 <style>
+
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,"Noto Sans TC",sans-serif;font-size:13px;background:#f4f2ee;color:#1a1916}
 /* header */
@@ -88,30 +89,38 @@ tr:hover td{background:#faf9f6}
 .eff-lbl{font-size:11px;color:#7a7670;margin-top:3px}
 /* empty */
 .empty{text-align:center;padding:60px;color:#7a7670}
-/* 登入畫面 */
-#login-screen{position:fixed;inset:0;background:#f4f2ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:999}
-#login-screen h1{font-size:22px;font-weight:700;color:#2d4a3e}
-#login-screen p{font-size:13px;color:#7a7670}
-.btn-google{display:flex;align-items:center;gap:10px;padding:12px 24px;background:#fff;border:1px solid #d5d0c8;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.btn-google:hover{background:#f8f7f4;box-shadow:0 2px 12px rgba(0,0,0,.12)}
-.btn-google img{width:20px;height:20px}
-#user-bar{display:flex;align-items:center;gap:10px;font-size:12px}
-#user-name{color:rgba(255,255,255,.8)}
-.btn-logout{height:26px;padding:0 10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:5px;color:#fff;font-size:11px;cursor:pointer}
-.btn-logout:hover{background:rgba(255,255,255,.25)}
-#loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:14px;color:#2d4a3e;font-weight:500}
-#loading-overlay.hide{display:none}
-.spinner{width:32px;height:32px;border:3px solid #e2ddd5;border-top-color:#2d4a3e;border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
 /* sync banner */
 #sync-banner{position:fixed;bottom:16px;right:16px;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;z-index:999;box-shadow:0 2px 12px rgba(0,0,0,.15);cursor:pointer;opacity:0;transition:opacity .4s;pointer-events:none}
 #sync-banner.show{opacity:1;pointer-events:auto}
+
+
+/* 排序圖示 */
+th[data-sort]{cursor:pointer;user-select:none}
+.sort-icon{color:#ccc;font-size:11px;margin-left:4px}
+
+/* 登入畫面 */
+#login-screen{position:fixed;inset:0;background:#f4f2ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:9999}
+#login-screen h1{font-size:22px;font-weight:700;color:#2d4a3e}
+#login-screen p{font-size:13px;color:#7a7670}
+.btn-google{display:flex;align-items:center;gap:10px;padding:12px 24px;background:#fff;border:1px solid #d5d0c8;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.btn-google:hover{background:#f8f7f4}
+.btn-google img{width:20px;height:20px}
+#user-bar{display:flex;align-items:center;gap:10px;font-size:12px;margin-left:auto}
+#user-name{color:rgba(255,255,255,.8)}
+.btn-logout{height:26px;padding:0 10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:5px;color:#fff;font-size:11px;cursor:pointer}
+.btn-logout:hover{background:rgba(255,255,255,.25)}
+
+/* 載入畫面 */
+#loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.92);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:14px;color:#2d4a3e;font-weight:500}
+#loading-overlay.hide{display:none}
+.spinner{width:32px;height:32px;border:3px solid #e2ddd5;border-top-color:#2d4a3e;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
 <!-- 登入畫面 -->
-<div id="login-screen" style="display:none">
+<div id="login-screen">
   <h1>✦ KOL 合作管理系統</h1>
   <p>請使用公司 Google 帳號登入</p>
   <button class="btn-google" id="btn-login">
@@ -125,13 +134,10 @@ tr:hover td{background:#faf9f6}
 <div id="loading-overlay"><div class="spinner"></div><span>正在連線資料庫，載入最新資料…</span></div>
 <div id="sync-banner"></div>
 
-<div class="hd">
+<div class="hd" style="display:flex;align-items:center">
   <span class="hd-title">✦ KOL 合作管理系統</span>
   <span class="hd-sub" id="hd-date"></span>
-  <div id="user-bar">
-    <span id="user-name"></span>
-    <button class="btn-logout" id="btn-logout">登出</button>
-  </div>
+  <div id="user-bar"><span id="user-name"></span><button class="btn-logout" id="btn-logout">登出</button></div>
 </div>
 
 <div class="layout">
@@ -181,11 +187,11 @@ tr:hover td{background:#faf9f6}
           <th>費用</th>
           <th>廣告授權</th>
           <th>狀態</th>
-          <th data-sort="date" style="cursor:pointer;user-select:none">合作日期 <span class="sort-icon" data-col="date">⇅</span></th>
+          <th data-sort="date">合作日期 <span class="sort-icon" data-col="date">⇅</span></th>
           <th>合作內容</th>
-          <th data-sort="quote" style="text-align:right;cursor:pointer;user-select:none">合作費用 <span class="sort-icon" data-col="quote">⇅</span></th>
-          <th data-sort="revenue" style="text-align:right;cursor:pointer;user-select:none">銷售收益 <span class="sort-icon" data-col="revenue">⇅</span></th>
-          <th data-sort="roi" style="text-align:right;cursor:pointer;user-select:none">ROI <span class="sort-icon" data-col="roi">⇅</span></th>
+          <th data-sort="quote" style="text-align:right">合作費用 <span class="sort-icon" data-col="quote">⇅</span></th>
+          <th data-sort="revenue" style="text-align:right">銷售收益 <span class="sort-icon" data-col="revenue">⇅</span></th>
+          <th data-sort="roi" style="text-align:right">ROI <span class="sort-icon" data-col="roi">⇅</span></th>
           <th>操作</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
@@ -265,8 +271,11 @@ tr:hover td{background:#faf9f6}
   </div>
 </div>
 
+<div id="sync-banner"></div>
+
+</div><!-- end #app -->
+
 <script type="module">
-// ── Firebase 設定 ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -280,13 +289,12 @@ const firebaseConfig = {
   appId: "1:701289487361:web:6fb5c89b1538d5a501b400"
 };
 
-const app = initializeApp(firebaseConfig);
-const db   = getFirestore(app);
-const auth = getAuth(app);
+const app      = initializeApp(firebaseConfig);
+const db       = getFirestore(app);
+const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
-const COL  = 'kols';
+const COL      = 'kols';
 
-// ── Seed data ──
 const SEED=[
   {id:1,kol:"iamyuxixi",type:"圖文合作",fans:"1萬～3萬",topic:"液態防曬",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"等待商品寄出",owner:"慧君",products:"02200005 黑M\n01161068 黑M\n01040669 白S",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
   {id:2,kol:"a_fu_7",type:"圖文合作",fans:"1千～5千",topic:"M SERIES",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"KOL洽談中",owner:"YURI",products:"",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
@@ -402,117 +410,126 @@ const SEED=[
 // ── State ──
 let data = [];
 let nextId = 1;
-let flt  = {status:'',type:'',pay:'',owner:'',ad:''};
+let flt = {status:'',type:'',pay:'',owner:'',ad:''};
 let search='', period='all', rangeFrom='', rangeTo='';
 let sortKey='id', sortAsc=false;
 let editingRow = null;
+let unsubscribeSnapshot = null;
+let syncStarted = false;
 
 // ── Banner ──
 function banner(msg, ok=true){
-  const el = document.getElementById('sync-banner');
-  el.textContent = msg;
-  el.style.background = ok ? '#eaf3de' : '#faeeda';
-  el.style.color = ok ? '#27500a' : '#633806';
-  el.style.border = '1px solid ' + (ok ? '#b8d99a' : '#e8c87a');
+  const el=document.getElementById('sync-banner');
+  el.textContent=msg;
+  el.style.background=ok?'#eaf3de':'#faeeda';
+  el.style.color=ok?'#27500a':'#633806';
+  el.style.border='1px solid '+(ok?'#b8d99a':'#e8c87a');
   el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'), 4000);
+  setTimeout(()=>el.classList.remove('show'),4000);
 }
 
 function hideOverlay(){
-  document.querySelectorAll('#loading-overlay').forEach(el=>el.classList.add('hide'));
+  const el=document.getElementById('loading-overlay');
+  if(el) el.classList.add('hide');
 }
 
-// ── 登入登出 ──
-async function login(){
-  try{
-    provider.setCustomParameters({ prompt: 'select_account' });
-    await signInWithRedirect(auth, provider);
-  } catch(e){
-    banner('登入失敗：'+e.message, false);
-    console.error('login error:', e);
-  }
+
+// ── 從 quote 欄位安全取出第一個數字 ──
+function extractCost(q){
+  if(!q && q!==0) return 0;
+  const m = String(q).match(/\d[\d,]*/);
+  if(!m) return 0;
+  const n = parseInt(m[0].replace(/,/g,''));
+  return isNaN(n) ? 0 : n;
 }
-async function logout(){
-  await signOut(auth);
-  location.reload();
+function fmtCost(q){
+  if(!q&&q!==0) return '—';
+  const n = extractCost(q);
+  return n>0 ? '$'+n.toLocaleString() : String(q).slice(0,12);
+}
+function roiBadge(d){
+  if(d.revenue==null) return '<span style="color:#ccc">—</span>';
+  const cost = extractCost(d.quote);
+  if(!cost) return d.revenue>0?'<span style="color:#27500a;font-weight:500">$'+d.revenue.toLocaleString()+'</span>':'<span style="color:#ccc">—</span>';
+  const roi=(d.revenue/cost).toFixed(1);
+  const col=roi>=3?'#27500a':roi>=1?'#2d4a3e':'#8a1a1a';
+  return '<span style="color:'+col+';font-weight:500">'+roi+'x</span>';
 }
 
-// ── 監聽登入狀態 ──
-let syncStarted = false;
-let unsubscribeSnapshot = null;
-
-onAuthStateChanged(auth, async (user)=>{
-  console.log('onAuthStateChanged 觸發，user:', user ? user.email : 'null');
-  if(user){
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='block';
-    document.getElementById('user-name').textContent = user.displayName || user.email;
-    if(!syncStarted){
-      syncStarted = true;
-      startRealtimeSync();
-    }
-  } else {
-    try{
-      const result = await getRedirectResult(auth);
-      if(result && result.user) return;
-    } catch(e){ console.error('redirect error:', e); }
-    syncStarted = false;
-    if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
-    document.getElementById('login-screen').style.display='flex';
-    document.getElementById('app').style.display='none';
-    hideOverlay();
-  }
-});
 
 // ── Firebase 即時監聽 ──
 function startRealtimeSync(){
-  console.log('startRealtimeSync 開始執行');
+  if(unsubscribeSnapshot){ unsubscribeSnapshot(); }
   const colRef = collection(db, COL);
   unsubscribeSnapshot = onSnapshot(colRef, (snapshot) => {
-    console.log('snapshot 收到，筆數：', snapshot.size);
-    if(snapshot.empty){
-      uploadSeed();
-      return;
-    }
+    if(snapshot.empty){ uploadSeed(); return; }
     data = snapshot.docs.map(d => d.data());
-    data.sort((a,b) => (b.id||0) - (a.id||0));
+    data.sort((a,b)=>(b.id||0)-(a.id||0));
     nextId = Math.max(...data.map(d=>d.id||0), 0) + 1;
     hideOverlay();
     buildSidebar();
     render();
   }, (err) => {
-    console.error('snapshot error:', err);
     banner('連線失敗：'+err.message, false);
     hideOverlay();
   });
 }
 
 async function uploadSeed(){
-  banner('首次使用，上傳初始資料中…', true);
+  banner('首次使用，上傳初始資料中…');
   for(const row of SEED){
     await setDoc(doc(db, COL, String(row.id)), row);
   }
-  banner('✓ 初始資料上傳完成', true);
+  banner('✓ 初始資料上傳完成');
 }
 
 async function saveRowToFirebase(row){
   try{
     await setDoc(doc(db, COL, String(row.id)), row);
     banner('✓ 已同步至資料庫');
-  }catch(e){
-    banner('⚠ 同步失敗：'+e.message, false);
-    console.error('save error', e);
-  }
+  }catch(e){ banner('⚠ 同步失敗：'+e.message, false); }
 }
 
 async function delRowFromFirebase(id){
   try{
     await deleteDoc(doc(db, COL, String(id)));
     banner('✓ 已刪除');
-  }catch(e){
-    banner('⚠ 刪除失敗：'+e.message, false);
-  }
+  }catch(e){ banner('⚠ 刪除失敗：'+e.message, false); }
 }
+
+// ── 登入登出 ──
+async function login(){
+  try{
+    provider.setCustomParameters({prompt:'select_account'});
+    await signInWithRedirect(auth, provider);
+  }catch(e){ banner('登入失敗：'+e.message, false); }
+}
+
+async function logout(){
+  if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot=null; }
+  syncStarted = false;
+  await signOut(auth);
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+// ── 監聽登入狀態 ──
+onAuthStateChanged(auth, async (user)=>{
+  if(user){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-name').textContent = user.displayName||user.email;
+    if(!syncStarted){ syncStarted=true; startRealtimeSync(); }
+  } else {
+    try{
+      const result = await getRedirectResult(auth);
+      if(result&&result.user) return;
+    }catch(e){}
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('app').style.display='none';
+    hideOverlay();
+  }
+});
 
 // ── Tags ──
 function typeTag(t){
@@ -533,22 +550,15 @@ function postIcon(u){
   if(u.includes('threads')) return '🧵';
   return '🔗';
 }
-// 從 quote 欄位安全取出第一個數字
-function extractCost(q){
-  if(!q && q!==0) return 0;
-  const m = String(q).match(/\d[\d,]*/);
-  if(!m) return 0;
-  const n = parseInt(m[0].replace(/,/g,''));
-  return isNaN(n) ? 0 : n;
-}
 function fmtCost(q){
   if(!q&&q!==0) return '—';
-  const n = extractCost(q);
-  return n>0 ? '$'+n.toLocaleString() : String(q).slice(0,12);
+  const m=String(q).match(/[0-9,]+/);
+  if(m){ const n=parseInt(m[0].replace(/,/g,'')); return '$'+n.toLocaleString(); }
+  return String(q).slice(0,12);
 }
 function roiBadge(d){
   if(d.revenue==null) return '<span style="color:#ccc">—</span>';
-  const cost = extractCost(d.quote);
+  const cost=parseInt(String(d.quote||'0').replace(/[^0-9]/g,'')||0);
   if(!cost) return d.revenue>0?'<span style="color:#27500a;font-weight:500">$'+d.revenue.toLocaleString()+'</span>':'<span style="color:#ccc">—</span>';
   const roi=(d.revenue/cost).toFixed(1);
   const col=roi>=3?'#27500a':roi>=1?'#2d4a3e':'#8a1a1a';
@@ -631,42 +641,12 @@ function buildSidebar(){
 
 // ── Render table ──
 function render(){
-  const filtered = getFiltered();
-
-  // 排序
-  const rows = [...filtered].sort((a,b)=>{
-    let av, bv;
-    if(sortKey==='date'){
-      av = a.date ? new Date(a.date).getTime() : 0;
-      bv = b.date ? new Date(b.date).getTime() : 0;
-    } else if(sortKey==='quote'){
-      av = extractCost(a.quote);
-      bv = extractCost(b.quote);
-    } else if(sortKey==='revenue'){
-      av = Number(a.revenue)||0;
-      bv = Number(b.revenue)||0;
-    } else if(sortKey==='roi'){
-      const costA = extractCost(a.quote); const costB = extractCost(b.quote);
-      av = costA>0 ? (Number(a.revenue)||0)/costA : (Number(a.revenue)||0)>0 ? 999 : 0;
-      bv = costB>0 ? (Number(b.revenue)||0)/costB : (Number(b.revenue)||0)>0 ? 999 : 0;
-    } else {
-      av = a.id||0; bv = b.id||0;
-    }
-    return sortAsc ? av-bv : bv-av;
-  });
-
-  // 更新三角形圖示
-  document.querySelectorAll('.sort-icon').forEach(el=>{
-    const col = el.dataset.col;
-    if(col===sortKey) el.textContent = sortAsc ? '▲' : '▼';
-    else el.textContent = '⇅';
-    el.style.color = col===sortKey ? '#2d4a3e' : '#ccc';
-  });
+  const rows = getFiltered();
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
 
   // Stats
-  const totalCost = rows.reduce((s,d)=>s+(d.pay==='收費'? extractCost(d.quote) :0),0);
+  const totalCost = rows.reduce((s,d)=>s+(d.pay==='收費'?parseInt(String(d.quote||'0').replace(/[^0-9]/g,'')||0):0),0);
   const totalRev  = rows.reduce((s,d)=>s+(Number(d.revenue)||0),0);
   const roi = totalCost>0?(totalRev/totalCost).toFixed(2)+'x':'—';
   document.getElementById('stats').innerHTML=
@@ -941,8 +921,8 @@ document.getElementById('btn-sync').addEventListener('click',e=>{
 document.querySelectorAll('.sync-opt').forEach(el=>{
   el.addEventListener('click',()=>{
     document.getElementById('sync-menu').style.display='none';
-    if(el.dataset.act==='pull') banner("資料已即時同步，無需手動拉取");
-    else if(el.dataset.act==='push'){ uploadSeed(); }
+    if(el.dataset.act==='pull') banner("資料已即時同步");
+    else if(el.dataset.act==='push'){ banner("資料已儲存在 Firebase，無需推送") }
   });
 });
 document.addEventListener('click',e=>{ if(!e.target.closest('#sync-wrap')) document.getElementById('sync-menu').style.display='none'; });
@@ -950,9 +930,9 @@ document.addEventListener('click',e=>{ if(!e.target.closest('#sync-wrap')) docum
 // ── 排序表頭點擊 ──
 document.querySelectorAll('th[data-sort]').forEach(th=>{
   th.addEventListener('click',()=>{
-    const key = th.dataset.sort;
+    const key=th.dataset.sort;
     if(sortKey===key) sortAsc=!sortAsc;
-    else { sortKey=key; sortAsc=false; }
+    else{ sortKey=key; sortAsc=false; }
     render();
   });
 });
@@ -962,6 +942,5 @@ document.getElementById('hd-date').textContent='更新：'+new Date().toLocaleDa
 document.getElementById('btn-login').addEventListener('click', login);
 document.getElementById('btn-logout').addEventListener('click', logout);
 </script>
-</div><!-- end #app -->
 </body>
 </html>
