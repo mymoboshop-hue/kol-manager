@@ -278,7 +278,7 @@ th[data-sort]{cursor:pointer;user-select:none}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBqLCElsXA-THZjEIgnQVKutih5ZBQUOaU",
@@ -501,8 +501,20 @@ async function delRowFromFirebase(id){
 async function login(){
   try{
     provider.setCustomParameters({prompt:'select_account'});
-    await signInWithRedirect(auth, provider);
-  }catch(e){ banner('登入失敗：'+e.message, false); }
+    const result = await signInWithPopup(auth, provider);
+    if(result && result.user){
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').style.display='block';
+      document.getElementById('user-name').textContent = result.user.displayName||result.user.email;
+      if(!syncStarted){ syncStarted=true; startRealtimeSync(); }
+    }
+  }catch(e){
+    if(e.code==='auth/popup-blocked'){
+      banner('請允許瀏覽器彈出視窗，或改用其他瀏覽器', false);
+    } else if(e.code!=='auth/cancelled-popup-request' && e.code!=='auth/popup-closed-by-user'){
+      banner('登入失敗：'+e.message, false);
+    }
+  }
 }
 
 async function logout(){
@@ -514,17 +526,13 @@ async function logout(){
 }
 
 // ── 監聽登入狀態 ──
-onAuthStateChanged(auth, async (user)=>{
+onAuthStateChanged(auth, (user)=>{
   if(user){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='block';
     document.getElementById('user-name').textContent = user.displayName||user.email;
     if(!syncStarted){ syncStarted=true; startRealtimeSync(); }
   } else {
-    try{
-      const result = await getRedirectResult(auth);
-      if(result&&result.user) return;
-    }catch(e){}
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('app').style.display='none';
     hideOverlay();
