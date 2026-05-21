@@ -550,20 +550,6 @@ function postIcon(u){
   if(u.includes('threads')) return '🧵';
   return '🔗';
 }
-function fmtCost(q){
-  if(!q&&q!==0) return '—';
-  const m=String(q).match(/[0-9,]+/);
-  if(m){ const n=parseInt(m[0].replace(/,/g,'')); return '$'+n.toLocaleString(); }
-  return String(q).slice(0,12);
-}
-function roiBadge(d){
-  if(d.revenue==null) return '<span style="color:#ccc">—</span>';
-  const cost=parseInt(String(d.quote||'0').replace(/[^0-9]/g,'')||0);
-  if(!cost) return d.revenue>0?'<span style="color:#27500a;font-weight:500">$'+d.revenue.toLocaleString()+'</span>':'<span style="color:#ccc">—</span>';
-  const roi=(d.revenue/cost).toFixed(1);
-  const col=roi>=3?'#27500a':roi>=1?'#2d4a3e':'#8a1a1a';
-  return `<span style="color:${col};font-weight:500">${roi}x</span>`;
-}
 function fmtDate(s){
   if(!s) return '—';
   try{ const d=new Date(s); return isNaN(d)?s:d.toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}); }catch(e){ return s; }
@@ -646,7 +632,7 @@ function render(){
   const empty = document.getElementById('empty');
 
   // Stats
-  const totalCost = rows.reduce((s,d)=>s+(d.pay==='收費'?parseInt(String(d.quote||'0').replace(/[^0-9]/g,'')||0):0),0);
+  const totalCost = rows.reduce((s,d)=>s+(d.pay==='收費'? extractCost(d.quote) :0),0);
   const totalRev  = rows.reduce((s,d)=>s+(Number(d.revenue)||0),0);
   const roi = totalCost>0?(totalRev/totalCost).toFixed(2)+'x':'—';
   document.getElementById('stats').innerHTML=
