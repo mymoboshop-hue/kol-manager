@@ -277,7 +277,7 @@ th[data-sort]{cursor:pointer;user-select:none}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -526,12 +526,33 @@ async function logout(){
 }
 
 // ── 監聽登入狀態 ──
-onAuthStateChanged(auth, (user)=>{
+onAuthStateChanged(auth, async (user)=>{
   if(user){
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='block';
-    document.getElementById('user-name').textContent = user.displayName||user.email;
-    if(!syncStarted){ syncStarted=true; startRealtimeSync(); }
+    // 檢查 Firebase admins 白名單
+    try{
+      const adminDoc = await getDoc(doc(db, 'admins', user.email));
+      if(adminDoc.exists() && adminDoc.data().allowed === true){
+        // 在白名單內，允許登入
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('app').style.display='block';
+        document.getElementById('user-name').textContent = user.displayName||user.email;
+        if(!syncStarted){ syncStarted=true; startRealtimeSync(); }
+      } else {
+        // 不在白名單，強制登出
+        await signOut(auth);
+        document.getElementById('login-screen').style.display='flex';
+        document.getElementById('app').style.display='none';
+        hideOverlay();
+        alert('此帳號（'+user.email+'）無權限存取，請聯絡管理員。');
+      }
+    } catch(e){
+      console.error('白名單驗證失敗：', e);
+      await signOut(auth);
+      document.getElementById('login-screen').style.display='flex';
+      document.getElementById('app').style.display='none';
+      hideOverlay();
+      alert('驗證失敗，請稍後再試。');
+    }
   } else {
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('app').style.display='none';
