@@ -446,6 +446,7 @@ let syncStarted = false;
 let unsubscribeSnapshot = null;
 
 onAuthStateChanged(auth, async (user)=>{
+  console.log('onAuthStateChanged 觸發，user:', user ? user.email : 'null');
   if(user){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='block';
@@ -469,8 +470,10 @@ onAuthStateChanged(auth, async (user)=>{
 
 // ── Firebase 即時監聽 ──
 function startRealtimeSync(){
+  console.log('startRealtimeSync 開始執行');
   const colRef = collection(db, COL);
   unsubscribeSnapshot = onSnapshot(colRef, (snapshot) => {
+    console.log('snapshot 收到，筆數：', snapshot.size);
     if(snapshot.empty){
       uploadSeed();
       return;
@@ -482,8 +485,8 @@ function startRealtimeSync(){
     buildSidebar();
     render();
   }, (err) => {
-    banner('連線失敗：'+err.message, false);
     console.error('snapshot error:', err);
+    banner('連線失敗：'+err.message, false);
     hideOverlay();
   });
 }
