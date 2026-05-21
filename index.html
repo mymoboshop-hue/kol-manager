@@ -88,7 +88,17 @@ tr:hover td{background:#faf9f6}
 .eff-lbl{font-size:11px;color:#7a7670;margin-top:3px}
 /* empty */
 .empty{text-align:center;padding:60px;color:#7a7670}
-/* loading overlay */
+/* 登入畫面 */
+#login-screen{position:fixed;inset:0;background:#f4f2ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:999}
+#login-screen h1{font-size:22px;font-weight:700;color:#2d4a3e}
+#login-screen p{font-size:13px;color:#7a7670}
+.btn-google{display:flex;align-items:center;gap:10px;padding:12px 24px;background:#fff;border:1px solid #d5d0c8;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.btn-google:hover{background:#f8f7f4;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+.btn-google img{width:20px;height:20px}
+#user-bar{display:flex;align-items:center;gap:10px;font-size:12px}
+#user-name{color:rgba(255,255,255,.8)}
+.btn-logout{height:26px;padding:0 10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:5px;color:#fff;font-size:11px;cursor:pointer}
+.btn-logout:hover{background:rgba(255,255,255,.25)}
 #loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:14px;color:#2d4a3e;font-weight:500}
 #loading-overlay.hide{display:none}
 .spinner{width:32px;height:32px;border:3px solid #e2ddd5;border-top-color:#2d4a3e;border-radius:50%;animation:spin .8s linear infinite}
@@ -100,9 +110,28 @@ tr:hover td{background:#faf9f6}
 </head>
 <body>
 
+<!-- 登入畫面 -->
+<div id="login-screen" style="display:none">
+  <h1>✦ KOL 合作管理系統</h1>
+  <p>請使用公司 Google 帳號登入</p>
+  <button class="btn-google" id="btn-login">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg">
+    使用 Google 帳號登入
+  </button>
+</div>
+
+<!-- 主系統 -->
+<div id="app" style="display:none">
+<div id="loading-overlay"><div class="spinner"></div><span>正在連線資料庫，載入最新資料…</span></div>
+<div id="sync-banner"></div>
+
 <div class="hd">
   <span class="hd-title">✦ KOL 合作管理系統</span>
   <span class="hd-sub" id="hd-date"></span>
+  <div id="user-bar">
+    <span id="user-name"></span>
+    <button class="btn-logout" id="btn-logout">登出</button>
+  </div>
 </div>
 
 <div class="layout">
@@ -243,6 +272,7 @@ tr:hover td{background:#faf9f6}
 // ── Firebase 設定 ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBqLCElsXA-THZjEIgnQVKutih5ZBQUOaU",
@@ -254,8 +284,10 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
-const COL = 'kols';
+const db   = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+const COL  = 'kols';
 
 // ── Seed data ──
 const SEED=[
@@ -393,6 +425,31 @@ function hideOverlay(){
   const el=document.getElementById('loading-overlay');
   if(el) el.classList.add('hide');
 }
+
+// ── 登入登出 ──
+async function login(){
+  try{ await signInWithPopup(auth, provider); }
+  catch(e){ banner('登入失敗：'+e.message, false); }
+}
+async function logout(){
+  await signOut(auth);
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+// ── 監聽登入狀態 ──
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-name').textContent = user.displayName || user.email;
+    startRealtimeSync();
+  } else {
+    document.getElementById('login-screen').style.display='flex';
+    document.getElementById('app').style.display='none';
+    hideOverlay();
+  }
+});
 
 // ── Firebase 即時監聽 ──
 function startRealtimeSync(){
@@ -886,7 +943,9 @@ document.querySelectorAll('th[data-sort]').forEach(th=>{
 
 // ── Init ──
 document.getElementById('hd-date').textContent='更新：'+new Date().toLocaleDateString('zh-TW');
-startRealtimeSync();
+document.getElementById('btn-login').addEventListener('click', login);
+document.getElementById('btn-logout').addEventListener('click', logout);
 </script>
+</div><!-- end #app -->
 </body>
 </html>
