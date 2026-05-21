@@ -244,6 +244,18 @@ th[data-sort]{cursor:pointer;user-select:none}
         <div class="fg"><label>銷售收益（元）</label><input id="f-revenue" type="number" min="0"></div>
         <div class="fg full"><label>廣告主代碼</label><input id="f-adcode"></div>
         <div class="fg full"><label>成效備註</label><textarea id="f-effnote"></textarea></div>
+        <div class="fg full">
+          <label>GA4 成效截圖</label>
+          <div id="ga4-preview" style="margin-bottom:8px;display:none">
+            <img id="ga4-img" src="" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid #e2ddd5">
+            <button type="button" id="btn-remove-ga4" style="display:block;margin-top:4px;font-size:11px;color:#8a1a1a;background:none;border:none;cursor:pointer">✕ 移除截圖</button>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 14px;border:1px dashed #c5c0b8;border-radius:8px;font-size:13px;color:#7a7670;background:#faf9f7" id="ga4-upload-label">
+            <span>📊</span><span id="ga4-upload-text">點擊上傳 GA4 截圖（JPG / PNG）</span>
+            <input type="file" id="f-ga4" accept="image/*" style="display:none">
+          </label>
+          <div id="ga4-uploading" style="display:none;font-size:12px;color:#7a7670;margin-top:4px">上傳中…</div>
+        </div>
       </div>
     </div>
     <div class="modal-ft">
@@ -279,6 +291,7 @@ th[data-sort]{cursor:pointer;user-select:none}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBqLCElsXA-THZjEIgnQVKutih5ZBQUOaU",
@@ -294,6 +307,7 @@ const db       = getFirestore(app);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
 const COL      = 'kols';
+const storage  = getStorage(app);
 
 const SEED=[
   {id:1,kol:"iamyuxixi",type:"圖文合作",fans:"1萬～3萬",topic:"液態防曬",pay:"互惠",quote:"",adAuth:false,adPartner:false,adCode:"",status:"等待商品寄出",owner:"慧君",products:"02200005 黑M\n01161068 黑M\n01040669 白S",branch:"",address:"",link:"",effnote:"",date:null,reach:null,engage:null,clicks:null,newfans:null,units:null,revenue:null,orderNo:''},
@@ -656,7 +670,37 @@ function buildSidebar(){
 
 // ── Render table ──
 function render(){
-  const rows = getFiltered();
+  const filtered = getFiltered();
+
+  // 排序
+  const rows = [...filtered].sort((a,b)=>{
+    let av, bv;
+    if(sortKey==='date'){
+      av = a.date ? new Date(a.date).getTime() : 0;
+      bv = b.date ? new Date(b.date).getTime() : 0;
+    } else if(sortKey==='quote'){
+      av = extractCost(a.quote);
+      bv = extractCost(b.quote);
+    } else if(sortKey==='revenue'){
+      av = Number(a.revenue)||0;
+      bv = Number(b.revenue)||0;
+    } else if(sortKey==='roi'){
+      const ca=extractCost(a.quote), cb=extractCost(b.quote);
+      av = ca>0?(Number(a.revenue)||0)/ca:(Number(a.revenue)||0)>0?999:0;
+      bv = cb>0?(Number(b.revenue)||0)/cb:(Number(b.revenue)||0)>0?999:0;
+    } else {
+      av = a.id||0; bv = b.id||0;
+    }
+    return sortAsc ? av-bv : bv-av;
+  });
+
+  // 更新三角形圖示
+  document.querySelectorAll('.sort-icon').forEach(el=>{
+    const col=el.dataset.col;
+    if(col===sortKey){ el.textContent=sortAsc?'▲':'▼'; el.style.color='#2d4a3e'; }
+    else{ el.textContent='⇅'; el.style.color='#ccc'; }
+  });
+
   const tbody = document.getElementById('tbody');
   const empty = document.getElementById('empty');
 
@@ -950,6 +994,42 @@ document.querySelectorAll('th[data-sort]').forEach(th=>{
     else{ sortKey=key; sortAsc=false; }
     render();
   });
+});
+
+
+// ── GA4 截圖上傳 ──
+document.getElementById('f-ga4').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const uploading = document.getElementById('ga4-uploading');
+  const label = document.getElementById('ga4-upload-label');
+  uploading.style.display='block';
+  label.style.opacity='0.5';
+  try{
+    const user = auth.currentUser;
+    const path = 'ga4/' + Date.now() + '_' + file.name;
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    e.target.dataset.url = url;
+    document.getElementById('ga4-img').src=url;
+    document.getElementById('ga4-preview').style.display='block';
+    document.getElementById('ga4-upload-text').textContent='重新上傳截圖';
+    banner('✓ GA4 截圖上傳完成');
+  }catch(err){
+    banner('⚠ 截圖上傳失敗：'+err.message, false);
+    console.error('ga4 upload error:', err);
+  }finally{
+    uploading.style.display='none';
+    label.style.opacity='1';
+  }
+});
+
+document.getElementById('btn-remove-ga4').addEventListener('click', ()=>{
+  document.getElementById('f-ga4').dataset.url='';
+  document.getElementById('ga4-img').src='';
+  document.getElementById('ga4-preview').style.display='none';
+  document.getElementById('ga4-upload-text').textContent='點擊上傳 GA4 截圖（JPG / PNG）';
 });
 
 // ── Init ──
