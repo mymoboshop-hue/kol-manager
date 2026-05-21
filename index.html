@@ -265,9 +265,6 @@ tr:hover td{background:#faf9f6}
   </div>
 </div>
 
-<div id="loading-overlay"><div class="spinner"></div><span>正在連線資料庫，載入最新資料…</span></div>
-<div id="sync-banner"></div>
-
 <script type="module">
 // ── Firebase 設定 ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -422,8 +419,7 @@ function banner(msg, ok=true){
 }
 
 function hideOverlay(){
-  const el=document.getElementById('loading-overlay');
-  if(el) el.classList.add('hide');
+  document.querySelectorAll('#loading-overlay').forEach(el=>el.classList.add('hide'));
 }
 
 // ── 登入登出 ──
