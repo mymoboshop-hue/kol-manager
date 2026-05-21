@@ -442,21 +442,22 @@ async function logout(){
 }
 
 // ── 監聽登入狀態 ──
+let syncStarted = false;
 onAuthStateChanged(auth, async (user)=>{
-  // 先處理 redirect 結果
-  try{
-    const result = await getRedirectResult(auth);
-    if(result && result.user) user = result.user;
-  } catch(e){
-    console.error('redirect result error:', e);
-  }
-
   if(user){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='block';
     document.getElementById('user-name').textContent = user.displayName || user.email;
-    startRealtimeSync();
+    if(!syncStarted){ syncStarted=true; startRealtimeSync(); }
   } else {
+    // 檢查是否有 redirect 結果
+    try{
+      const result = await getRedirectResult(auth);
+      if(result && result.user){
+        // redirect 登入成功，onAuthStateChanged 會再次觸發
+        return;
+      }
+    } catch(e){ console.error('redirect error:', e); }
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('app').style.display='none';
     hideOverlay();
