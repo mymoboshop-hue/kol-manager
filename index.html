@@ -227,7 +227,7 @@ th[data-sort]{cursor:pointer;user-select:none}
           <select id="f-adAuth"><option value="0">無</option><option value="1">有</option></select>
         </div>
         <div class="fg"><label>狀態</label>
-          <select id="f-status"><option>KOL洽談中</option><option>KOL拍攝中</option><option>已結案</option></select>
+          <select id="f-status"><option>備選中</option><option>KOL洽談中</option><option>KOL拍攝中</option><option>已結案</option></select>
         </div>
         <div class="fg"><label>合作日期</label><input id="f-date" type="date"></div>
         <div class="fg full"><label>挑選單品</label><textarea id="f-products"></textarea></div>
@@ -244,6 +244,11 @@ th[data-sort]{cursor:pointer;user-select:none}
         <div class="fg"><label>銷售收益（元）</label><input id="f-revenue" type="number" min="0"></div>
         <div class="fg full"><label>廣告主代碼</label><input id="f-adcode"></div>
         <div class="fg full"><label>成效備註</label><textarea id="f-effnote"></textarea></div>
+        <div class="fg full" id="fg-prospect" style="display:none">
+          <label>預估報價（備選專用）</label>
+          <input type="text" id="f-prospect" placeholder="例：圖文 $3,000 / Reels $5,000">
+          <div style="font-size:11px;color:#7a7670;margin-top:4px">記錄對方報價或預估合作費用，供未來決策參考</div>
+        </div>
         <div class="fg full">
           <label>GA4 成效截圖</label>
           <div id="ga4-preview" style="margin-bottom:8px;display:none">
@@ -582,7 +587,7 @@ function typeTag(t){
 function payTag(p){ return p==='收費'?'<span class="tag t-amber">收費</span>':'<span class="tag t-green">互惠</span>'; }
 function adTag(v){ return v?'<span class="tag t-green">✓ 有</span>':'<span class="tag t-red">✗ 無</span>'; }
 function statusTag(s){
-  const m={已結案:'t-green',KOL拍攝中:'t-amber',KOL洽談中:'t-blue'};
+  const m={已結案:'t-green',KOL拍攝中:'t-amber',KOL洽談中:'t-blue',備選中:'t-orange'};
   return s?`<span class="tag ${m[s]||'t-gray'}">${s}</span>`:'';
 }
 function postIcon(u){
@@ -642,7 +647,7 @@ function buildSidebar(){
       `<button class="fb ${cur===''?'on':''}" data-key="${key}" data-val="">全部 <span class="c">${data.length}</span></button>`+
       opts.map(v=>`<button class="fb ${cur===v?'on':''}" data-key="${key}" data-val="${v}">${v} <span class="c">${cnt[v]||0}</span></button>`).join('');
   }
-  grp('sb-status','status',['KOL洽談中','KOL拍攝中','等待商品寄出','已結案']);
+  grp('sb-status','status',['備選中','KOL洽談中','KOL拍攝中','等待商品寄出','已結案']);
   grp('sb-type','type',['圖文合作','REELS短片','Threads','YT影片','限動合作','抽獎合作']);
   grp('sb-pay','pay',['互惠','收費']);
   const owners=[...new Set(data.map(d=>d.owner).filter(Boolean))].sort();
@@ -1034,6 +1039,10 @@ document.getElementById('btn-remove-ga4').addEventListener('click', ()=>{
 
 // ── Init ──
 document.getElementById('hd-date').textContent='更新：'+new Date().toLocaleDateString('zh-TW');
+// 狀態切換時顯示/隱藏預估報價欄位
+document.getElementById('f-status').addEventListener('change', function(){
+  document.getElementById('fg-prospect').style.display = this.value==='備選中' ? 'block' : 'none';
+});
 document.getElementById('btn-login').addEventListener('click', login);
 document.getElementById('btn-logout').addEventListener('click', logout);
 </script>
