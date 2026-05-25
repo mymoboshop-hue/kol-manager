@@ -810,6 +810,7 @@ function openDetail(d){
     </div>
     ${d.reach&&d.engage?`<div class="d-row"><span class="d-key">互動率</span><span class="d-val" style="font-weight:500;color:#2d4a3e">${(d.engage/d.reach*100).toFixed(2)}%</span></div>`:''}
     ${d.effnote?`<div class="d-row"><span class="d-key">成效備註</span><span class="d-val" style="color:#7a7670">${d.effnote}</span></div>`:''}
+    ${d.ga4url?`<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="${d.ga4url}" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px"></div>`:''}
   `;
   document.getElementById('det-edit-btn').onclick=()=>{ closeDetail(); openEditForm(d); };
   document.getElementById('det-del-btn').onclick=()=>{
@@ -838,6 +839,18 @@ function openEditForm(d){
   document.getElementById('f-date').value     = normDate(d.date);
   document.getElementById('f-products').value = d.products||'';
   document.getElementById('f-postlink').value = d.postLink||'';
+  // GA4 截圖
+  const ga4url = d.ga4url||'';
+  document.getElementById('f-ga4').dataset.url = ga4url;
+  if(ga4url){
+    document.getElementById('ga4-img').src = ga4url;
+    document.getElementById('ga4-preview').style.display='block';
+    document.getElementById('ga4-upload-text').textContent='重新上傳截圖';
+  } else {
+    document.getElementById('ga4-img').src='';
+    document.getElementById('ga4-preview').style.display='none';
+    document.getElementById('ga4-upload-text').textContent='點擊上傳 GA4 截圖（JPG / PNG）';
+  }
   document.getElementById('f-link').value     = d.link||'';
   document.getElementById('f-order').value    = d.orderNo||'';
   document.getElementById('f-address').value  = d.address||'';
@@ -887,6 +900,7 @@ function saveForm(){
     status:   document.getElementById('f-status').value,
     products: document.getElementById('f-products').value,
     postLink: document.getElementById('f-postlink').value||null,
+    ga4url: document.getElementById('f-ga4').dataset.url||null,
     link:     document.getElementById('f-link').value,
     orderNo:  document.getElementById('f-order').value,
     address:  document.getElementById('f-address').value,
@@ -1002,33 +1016,62 @@ document.querySelectorAll('th[data-sort]').forEach(th=>{
 });
 
 
-// ── GA4 截圖上傳 ──
+// ── GA4 截圖上傳（Base64，不需要 Storage）──
 document.getElementById('f-ga4').addEventListener('change', async (e)=>{
   const file = e.target.files[0];
   if(!file) return;
+
+  // 檢查檔案大小（限制 800KB）
+  if(file.size > 800 * 1024){
+    banner('⚠ 圖片太大，請壓縮至 800KB 以下', false);
+    return;
+  }
+
   const uploading = document.getElementById('ga4-uploading');
   const label = document.getElementById('ga4-upload-label');
   uploading.style.display='block';
   label.style.opacity='0.5';
+
   try{
-    const user = auth.currentUser;
-    const path = 'ga4/' + Date.now() + '_' + file.name;
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-    e.target.dataset.url = url;
-    document.getElementById('ga4-img').src=url;
+    // 讀取圖片並轉成 Base64
+    const base64 = await new Promise((res, rej)=>{
+      const reader = new FileReader();
+      reader.onload = ()=> res(reader.result);
+      reader.onerror = ()=> rej(new Error('讀取失敗'));
+      reader.readAsDataURL(file);
+    });
+
+    // 壓縮圖片
+    const compressed = await compressImage(base64, 800, 0.7);
+    e.target.dataset.url = compressed;
+    document.getElementById('ga4-img').src = compressed;
     document.getElementById('ga4-preview').style.display='block';
     document.getElementById('ga4-upload-text').textContent='重新上傳截圖';
-    banner('✓ GA4 截圖上傳完成');
+    banner('✓ GA4 截圖已載入');
   }catch(err){
-    banner('⚠ 截圖上傳失敗：'+err.message, false);
-    console.error('ga4 upload error:', err);
+    banner('⚠ 截圖載入失敗：'+err.message, false);
+    console.error('ga4 error:', err);
   }finally{
     uploading.style.display='none';
     label.style.opacity='1';
   }
 });
+
+// ── 圖片壓縮函式 ──
+function compressImage(base64, maxWidth, quality){
+  return new Promise((res)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if(w > maxWidth){ h = h * maxWidth / w; w = maxWidth; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      res(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.src = base64;
+  });
+}
 
 document.getElementById('btn-remove-ga4').addEventListener('click', ()=>{
   document.getElementById('f-ga4').dataset.url='';
