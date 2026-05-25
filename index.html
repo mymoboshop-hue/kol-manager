@@ -1111,6 +1111,10 @@ function closeLightbox(){
 }
 function closeLightboxOnEsc(e){ if(e.key==='Escape') closeLightbox(); }
 
+// 掛到 window 讓 HTML onclick 能呼叫
+window.openLightbox = openLightbox;
+window.closeLightbox = closeLightbox;
+
 document.getElementById('btn-login').addEventListener('click', login);
 document.getElementById('btn-logout').addEventListener('click', logout);
 </script>
