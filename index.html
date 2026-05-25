@@ -191,7 +191,7 @@ th[data-sort]{cursor:pointer;user-select:none}
     </div>
     <div class="stats" id="stats"></div>
     <div class="tbl-wrap">
-      <table>
+      <table id="main-table">
         <thead><tr id="thead-row">
           <th>KOL 帳號</th>
           <th>形式</th>
@@ -205,6 +205,7 @@ th[data-sort]{cursor:pointer;user-select:none}
           <th data-sort="quote" style="text-align:right">合作費用 <span class="sort-icon" data-col="quote">⇅</span></th>
           <th data-sort="revenue" style="text-align:right">銷售收益 <span class="sort-icon" data-col="revenue">⇅</span></th>
           <th data-sort="roi" style="text-align:right">ROI <span class="sort-icon" data-col="roi">⇅</span></th>
+          <th style="text-align:center">有效推廣</th>
           <th>操作</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
@@ -256,6 +257,11 @@ th[data-sort]{cursor:pointer;user-select:none}
         <div class="fg"><label>銷售件數</label><input id="f-units" type="number" min="0"></div>
         <div class="fg"><label>銷售收益（元）</label><input id="f-revenue" type="number" min="0"></div>
         <div class="fg full"><label>廣告主代碼</label><input id="f-adcode"></div>
+        <div class="fg" style="align-items:center;gap:10px">
+          <label style="margin:0">有效推廣</label>
+          <input type="checkbox" id="f-effcheck" style="width:18px;height:18px;accent-color:#2d4a3e;cursor:pointer">
+          <span style="font-size:12px;color:#7a7670">勾選表示此次合作商品有帶來實際收益</span>
+        </div>
         <div class="fg full"><label>成效備註</label><textarea id="f-effnote"></textarea></div>
         <div class="fg full" id="fg-prospect" style="display:none">
           <label>預估報價（備選專用）</label>
@@ -823,6 +829,7 @@ function openDetail(d){
     </div>
     ${d.reach&&d.engage?`<div class="d-row"><span class="d-key">互動率</span><span class="d-val" style="font-weight:500;color:#2d4a3e">${(d.engage/d.reach*100).toFixed(2)}%</span></div>`:''}
     ${d.effnote?`<div class="d-row"><span class="d-key">成效備註</span><span class="d-val" style="color:#7a7670">${d.effnote}</span></div>`:''}
+    ${d.effCheck!==undefined?`<div class="d-row"><span class="d-key">有效推廣</span><span class="d-val">${d.effCheck?'✅ 是':'❌ 否'}</span></div>`:''}
     ${d.ga4url?`<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="${d.ga4url}" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px;cursor:zoom-in" onclick="openLightbox(this.src)" title="點擊放大"></div>`:''}
   `;
   document.getElementById('det-edit-btn').onclick=()=>{ closeDetail(); openEditForm(d); };
@@ -875,6 +882,7 @@ function openEditForm(d){
   document.getElementById('f-revenue').value  = d.revenue!=null?d.revenue:'';
   document.getElementById('f-adcode').value   = d.adCode||'';
   document.getElementById('f-effnote').value  = d.effnote||'';
+  document.getElementById('f-effcheck').checked = d.effCheck||false;
   document.getElementById('form-wrap').classList.add('open');
 }
 
@@ -914,6 +922,7 @@ function saveForm(){
     products: document.getElementById('f-products').value,
     postLink: document.getElementById('f-postlink').value||null,
     ga4url: document.getElementById('f-ga4').dataset.url||null,
+    effCheck: document.getElementById('f-effcheck').checked,
     link:     document.getElementById('f-link').value,
     orderNo:  document.getElementById('f-order').value,
     address:  document.getElementById('f-address').value,
@@ -1017,6 +1026,20 @@ document.querySelectorAll('.sync-opt').forEach(el=>{
   });
 });
 document.addEventListener('click',e=>{ if(!e.target.closest('#sync-wrap')) document.getElementById('sync-menu').style.display='none'; });
+
+
+// ── 有效推廣勾選即時同步 ──
+document.getElementById('main-table').addEventListener('change', async (e)=>{
+  if(!e.target.classList.contains('eff-check')) return;
+  const id = Number(e.target.dataset.id);
+  const row = data.find(d=>d.id===id);
+  if(row){
+    row.effCheck = e.target.checked;
+    await saveRowToFirebase(row);
+    buildSidebar();
+    render();
+  }
+});
 
 // ── 排序表頭點擊 ──
 document.querySelectorAll('th[data-sort]').forEach(th=>{
