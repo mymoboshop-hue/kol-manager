@@ -205,8 +205,8 @@ th[data-sort]{cursor:pointer;user-select:none}
           <th data-sort="quote" style="text-align:right">合作費用 <span class="sort-icon" data-col="quote">⇅</span></th>
           <th data-sort="revenue" style="text-align:right">銷售收益 <span class="sort-icon" data-col="revenue">⇅</span></th>
           <th data-sort="roi" style="text-align:right">ROI <span class="sort-icon" data-col="roi">⇅</span></th>
-          <th style="text-align:center">有效推廣</th>
-          <th>操作</th>
+          <th style="text-align:center;width:60px;white-space:nowrap">有效推廣</th>
+          <th style="width:80px">操作</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -763,6 +763,7 @@ function render(){
       <td style="text-align:right;font-family:monospace;font-size:12px">${d.quote?'<span style="color:#633806">'+fmtCost(d.quote)+'</span>':'<span style="color:#ccc">—</span>'}</td>
       <td style="text-align:right;font-family:monospace;font-size:12px">${d.revenue!=null?'<span style="color:#27500a;font-weight:500">$'+Number(d.revenue).toLocaleString()+'</span>':'<span style="color:#ccc">—</span>'}</td>
       <td style="text-align:right">${roiBadge(d)}</td>
+      <td style="text-align:center;width:60px"><input type="checkbox" class="eff-check" data-id="${d.id}" ${d.effCheck?'checked':''} style="width:16px;height:16px;accent-color:#2d4a3e;cursor:pointer" onclick="event.stopPropagation()"></td>
       <td style="display:flex;gap:4px;align-items:center">
         <button class="btn" style="height:26px;padding:0 8px;font-size:14px" data-idx="${i}" data-act="detail">🔍</button>
         <button class="btn" style="height:26px;padding:0 8px;font-size:11px" data-idx="${i}" data-act="edit">編輯</button>
