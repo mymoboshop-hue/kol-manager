@@ -115,6 +115,13 @@ th[data-sort]{cursor:pointer;user-select:none}
 #loading-overlay.hide{display:none}
 .spinner{width:32px;height:32px;border:3px solid #e2ddd5;border-top-color:#2d4a3e;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* 燈箱 */
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:none;align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox.show{display:flex}
+#lightbox img{max-width:90vw;max-height:90vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+#lightbox-close{position:fixed;top:20px;right:24px;color:#fff;font-size:28px;cursor:pointer;line-height:1;opacity:.8}
+#lightbox-close:hover{opacity:1}
 </style>
 </head>
 <body>
@@ -131,6 +138,10 @@ th[data-sort]{cursor:pointer;user-select:none}
 
 <!-- 主系統 -->
 <div id="app" style="display:none">
+<div id="lightbox" onclick="closeLightbox()">
+  <span id="lightbox-close" onclick="closeLightbox()">✕</span>
+  <img id="lightbox-img" src="" alt="GA4 截圖放大">
+</div>
 <div id="loading-overlay"><div class="spinner"></div><span>正在連線資料庫，載入最新資料…</span></div>
 <div id="sync-banner"></div>
 
@@ -810,7 +821,7 @@ function openDetail(d){
     </div>
     ${d.reach&&d.engage?`<div class="d-row"><span class="d-key">互動率</span><span class="d-val" style="font-weight:500;color:#2d4a3e">${(d.engage/d.reach*100).toFixed(2)}%</span></div>`:''}
     ${d.effnote?`<div class="d-row"><span class="d-key">成效備註</span><span class="d-val" style="color:#7a7670">${d.effnote}</span></div>`:''}
-    ${d.ga4url?`<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="${d.ga4url}" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px"></div>`:''}
+    ${d.ga4url?`<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="${d.ga4url}" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px;cursor:zoom-in" onclick="openLightbox(this.src)" title="點擊放大"></div>`:''}
   `;
   document.getElementById('det-edit-btn').onclick=()=>{ closeDetail(); openEditForm(d); };
   document.getElementById('det-del-btn').onclick=()=>{
@@ -1086,6 +1097,20 @@ document.getElementById('hd-date').textContent='更新：'+new Date().toLocaleDa
 document.getElementById('f-status').addEventListener('change', function(){
   document.getElementById('fg-prospect').style.display = this.value==='備選中' ? 'block' : 'none';
 });
+
+// ── 燈箱放大圖片 ──
+function openLightbox(src){
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('show');
+  document.addEventListener('keydown', closeLightboxOnEsc);
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('show');
+  document.getElementById('lightbox-img').src = '';
+  document.removeEventListener('keydown', closeLightboxOnEsc);
+}
+function closeLightboxOnEsc(e){ if(e.key==='Escape') closeLightbox(); }
+
 document.getElementById('btn-login').addEventListener('click', login);
 document.getElementById('btn-logout').addEventListener('click', logout);
 </script>
