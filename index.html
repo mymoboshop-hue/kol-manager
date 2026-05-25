@@ -117,11 +117,12 @@ th[data-sort]{cursor:pointer;user-select:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* 燈箱 */
-#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:none;align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:none;align-items:center;justify-content:center;cursor:zoom-out;overflow:hidden}
 #lightbox.show{display:flex}
-#lightbox img{max-width:90vw;max-height:90vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.5)}
-#lightbox-close{position:fixed;top:20px;right:24px;color:#fff;font-size:28px;cursor:pointer;line-height:1;opacity:.8}
+#lightbox img{max-width:90vw;max-height:90vh;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,.5);transition:transform .1s;user-select:none}
+#lightbox-close{position:fixed;top:20px;right:24px;color:#fff;font-size:28px;cursor:pointer;line-height:1;opacity:.8;z-index:10000}
 #lightbox-close:hover{opacity:1}
+#lightbox-hint{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.6);font-size:12px;z-index:10000;pointer-events:none}
 </style>
 </head>
 <body>
@@ -141,6 +142,7 @@ th[data-sort]{cursor:pointer;user-select:none}
 <div id="lightbox" onclick="closeLightbox()">
   <span id="lightbox-close" onclick="closeLightbox()">✕</span>
   <img id="lightbox-img" src="" alt="GA4 截圖放大">
+  <div id="lightbox-hint">滾輪縮放 ｜ 拖曳移動 ｜ 雙擊重置 ｜ Esc 關閉</div>
 </div>
 <div id="loading-overlay"><div class="spinner"></div><span>正在連線資料庫，載入最新資料…</span></div>
 <div id="sync-banner"></div>
@@ -1098,18 +1100,71 @@ document.getElementById('f-status').addEventListener('change', function(){
   document.getElementById('fg-prospect').style.display = this.value==='備選中' ? 'block' : 'none';
 });
 
-// ── 燈箱放大圖片 ──
+// ── 燈箱放大圖片（支援縮放和拖曳）──
+let lbScale = 1, lbDragging = false, lbStartX = 0, lbStartY = 0, lbTransX = 0, lbTransY = 0;
+
 function openLightbox(src){
-  document.getElementById('lightbox-img').src = src;
+  lbScale = 1; lbTransX = 0; lbTransY = 0;
+  const img = document.getElementById('lightbox-img');
+  img.src = src;
+  img.style.transform = 'scale(1) translate(0,0)';
+  img.style.cursor = 'grab';
   document.getElementById('lightbox').classList.add('show');
   document.addEventListener('keydown', closeLightboxOnEsc);
 }
+
 function closeLightbox(){
   document.getElementById('lightbox').classList.remove('show');
   document.getElementById('lightbox-img').src = '';
   document.removeEventListener('keydown', closeLightboxOnEsc);
 }
+
 function closeLightboxOnEsc(e){ if(e.key==='Escape') closeLightbox(); }
+
+function updateLbTransform(){
+  const img = document.getElementById('lightbox-img');
+  img.style.transform = `scale(${lbScale}) translate(${lbTransX/lbScale}px,${lbTransY/lbScale}px)`;
+}
+
+// 滾輪縮放
+document.getElementById('lightbox').addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.15 : 0.15;
+  lbScale = Math.min(Math.max(lbScale + delta, 0.5), 5);
+  updateLbTransform();
+  document.getElementById('lightbox-img').style.cursor = lbScale > 1 ? 'grab' : 'grab';
+}, { passive: false });
+
+// 拖曳移動
+document.getElementById('lightbox-img').addEventListener('mousedown', (e)=>{
+  if(lbScale <= 1) return;
+  lbDragging = true;
+  lbStartX = e.clientX - lbTransX;
+  lbStartY = e.clientY - lbTransY;
+  e.target.style.cursor = 'grabbing';
+  e.stopPropagation();
+});
+
+document.addEventListener('mousemove', (e)=>{
+  if(!lbDragging) return;
+  lbTransX = e.clientX - lbStartX;
+  lbTransY = e.clientY - lbStartY;
+  updateLbTransform();
+});
+
+document.addEventListener('mouseup', ()=>{
+  if(lbDragging){
+    lbDragging = false;
+    document.getElementById('lightbox-img').style.cursor = 'grab';
+  }
+});
+
+// 雙擊重置
+document.getElementById('lightbox-img').addEventListener('dblclick', (e)=>{
+  lbScale = 1; lbTransX = 0; lbTransY = 0;
+  updateLbTransform();
+  e.stopPropagation();
+});
 
 // 掛到 window 讓 HTML onclick 能呼叫
 window.openLightbox = openLightbox;
