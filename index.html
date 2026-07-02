@@ -127,6 +127,7 @@ tr:hover td{background:#faf9f6}
 #dashboard-wrap{display:none;padding:1.25rem;overflow-y:auto;flex:1;flex-direction:column}
 .dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
 .dash-back{display:flex;align-items:center;gap:6px;font-size:13px;color:#2d4a3e;cursor:pointer;padding:6px 12px;border:0.5px solid #e2ddd5;border-radius:8px;background:#fff;border-width:1px}
+.dash-sort-btn.on{background:#2d4a3e!important;color:#fff!important;border-color:#2d4a3e!important}
 .dash-back:hover{background:#f4f2ee}
 .kol-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
 .kol-card{background:#fff;border:0.5px solid #e2ddd5;border-radius:12px;padding:1rem 1.25rem}
@@ -236,7 +237,14 @@ th[data-sort]{cursor:pointer;user-select:none}
       <div style="font-size:15px;font-weight:500;color:#2d4a3e">摘要儀表板</div>
       <div style="font-size:12px;color:#7a7670" id="dash-subtitle"></div>
     </div>
-    <button class="dash-back" id="btn-dash-back">← 返回列表</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;color:#7a7670">排序：</span>
+      <button class="dash-sort-btn on" data-sort="recommend" style="height:30px;padding:0 10px;border:1px solid #d5d0c8;border-radius:6px;background:#f8f7f4;font-size:12px;cursor:pointer">⭐ 推薦優先</button>
+      <button class="dash-sort-btn" data-sort="count" style="height:30px;padding:0 10px;border:1px solid #d5d0c8;border-radius:6px;background:#f8f7f4;font-size:12px;cursor:pointer">合作次數</button>
+      <button class="dash-sort-btn" data-sort="effrate" style="height:30px;padding:0 10px;border:1px solid #d5d0c8;border-radius:6px;background:#f8f7f4;font-size:12px;cursor:pointer">有效率</button>
+      <button class="dash-sort-btn" data-sort="revenue" style="height:30px;padding:0 10px;border:1px solid #d5d0c8;border-radius:6px;background:#f8f7f4;font-size:12px;cursor:pointer">收益</button>
+      <button class="dash-back" id="btn-dash-back" style="margin-left:8px">← 返回列表</button>
+    </div>
   </div>
   <div class="kol-grid" id="dash-grid"></div>
 </div>
@@ -1171,7 +1179,8 @@ function renderDashboard(){
   });
 
   const kols = Object.values(kolMap).sort((a,b)=>b.records.length-a.records.length);
-  document.getElementById('dash-subtitle').textContent = '共 '+kols.length+' 位 KOL／KOC，依合作次數排列';
+  const sortLabel = {recommend:'推薦優先', count:'合作次數', effrate:'有效率', revenue:'收益'};
+  document.getElementById('dash-subtitle').textContent = '共 '+kols.length+' 位 KOL／KOC，依 '+sortLabel[dashSort]+' 排列';
 
   const colors = [
     ['#eaf3de','#27500a'],['#EEEDFE','#3C3489'],['#faeeda','#633806'],
@@ -1411,6 +1420,14 @@ window.hideDashboard = hideDashboard;
 window.closeLightbox = closeLightbox;
 
 document.getElementById('btn-dashboard').addEventListener('click', showDashboard);
+document.querySelectorAll('.dash-sort-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    dashSort = btn.dataset.sort;
+    document.querySelectorAll('.dash-sort-btn').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    renderDashboard();
+  });
+});
 document.getElementById('btn-dash-back').addEventListener('click', hideDashboard);
 document.getElementById('btn-login').addEventListener('click', login);
 document.getElementById('btn-logout').addEventListener('click', logout);
