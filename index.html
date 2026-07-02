@@ -16,8 +16,7 @@ body{font-family:system-ui,"Noto Sans TC",sans-serif;font-size:13px;background:#
 .layout{display:flex;height:calc(100vh - 52px)}
 
 /* 儀表板 */
-#dashboard-wrap{display:none;padding:1.25rem}
-#dashboard-wrap.show{display:block}
+/* dashboard CSS moved below */
 .kol-card{background:#fff;border:0.5px solid #e2ddd5;border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
 .kol-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
 .kol-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex-shrink:0}
@@ -1170,6 +1169,7 @@ function hideDashboard(){
   document.querySelector('.tbl-wrap').style.display='';
 }
 
+let dashSort = "recommend";
 function renderDashboard(){
   const kolMap = {};
   data.filter(d=>d.kol&&d.kol.trim()&&!d.kol.includes('預計')).forEach(d=>{
