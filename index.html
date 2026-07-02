@@ -1201,9 +1201,9 @@ function renderDashboard(){
     ).length;
     const effRate = effTotal>0 ? combinedCount/effTotal : 0;
     const totalRev = recs.reduce((s,r)=>s+(Number(r.revenue)||0),0);
-
-
+    return {...k, _effRate:effRate, _effCount:effCount, _effTotal:effTotal, _totalRev:totalRev, _brandCount:brandCount};
   });
+
 
   const kols = kolList.sort((a,b)=>{
     if(dashSort==='recommend'){
