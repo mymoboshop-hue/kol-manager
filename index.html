@@ -124,8 +124,7 @@ tr:hover td{background:#faf9f6}
 #sync-banner.show{opacity:1;pointer-events:auto}
 
 /* 儀表板 */
-#dashboard-wrap{display:none;padding:1.25rem;overflow-y:auto;flex:1}
-#dashboard-wrap.show{display:flex;flex-direction:column}
+#dashboard-wrap{display:none;padding:1.25rem;overflow-y:auto;flex:1;flex-direction:column}
 .dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
 .dash-back{display:flex;align-items:center;gap:6px;font-size:13px;color:#2d4a3e;cursor:pointer;padding:6px 12px;border:0.5px solid #e2ddd5;border-radius:8px;background:#fff;border-width:1px}
 .dash-back:hover{background:#f4f2ee}
@@ -231,6 +230,16 @@ th[data-sort]{cursor:pointer;user-select:none}
   </aside>
 
   <div class="main">
+    <div id="dashboard-wrap">
+  <div class="dash-header">
+    <div>
+      <div style="font-size:15px;font-weight:500;color:#2d4a3e">摘要儀表板</div>
+      <div style="font-size:12px;color:#7a7670" id="dash-subtitle"></div>
+    </div>
+    <button class="dash-back" id="btn-dash-back">← 返回列表</button>
+  </div>
+  <div class="kol-grid" id="dash-grid"></div>
+</div>
     <div class="tb">
       <input type="text" id="search" placeholder="搜尋 KOL、主題、負責人...">
       <button class="btn btn-warn" id="btn-reset">✕ 清除篩選</button>
@@ -260,18 +269,6 @@ th[data-sort]{cursor:pointer;user-select:none}
     <div class="stats" id="stats"></div>
     <div class="tbl-wrap">
       
-<div id="dashboard-wrap">
-  <div class="dash-header">
-    <div>
-      <div style="font-size:15px;font-weight:500;color:#2d4a3e">摘要儀表板</div>
-      <div style="font-size:12px;color:#7a7670" id="dash-subtitle"></div>
-    </div>
-    <button class="dash-back" onclick="hideDashboard()">
-      <i class="ti ti-arrow-left" aria-hidden="true"></i> 返回列表
-    </button>
-  </div>
-  <div class="dash-grid" id="dash-grid"></div>
-</div>
 <table id="main-table">
         <thead><tr id="thead-row">
           <th>KOL 帳號</th>
@@ -1138,7 +1135,7 @@ document.getElementById('main-table').addEventListener('change', async (e)=>{
 
 // ── 儀表板 ──
 function showDashboard(){
-  document.getElementById('dashboard-wrap').classList.add('show');
+  document.getElementById('dashboard-wrap').style.display='flex';
   document.querySelector('.tb').style.display='none';
   document.getElementById('stats').style.display='none';
   document.querySelector('.tbl-wrap').style.display='none';
@@ -1146,7 +1143,7 @@ function showDashboard(){
 }
 
 function hideDashboard(){
-  document.getElementById('dashboard-wrap').classList.remove('show');
+  document.getElementById('dashboard-wrap').style.display='none';
   document.querySelector('.tb').style.display='';
   document.getElementById('stats').style.display='';
   document.querySelector('.tbl-wrap').style.display='';
