@@ -1214,8 +1214,19 @@ function renderDashboard(){
       const hasBrandB = b._brandCount>0;
       const hasAssessedA = a._effTotal>0;
       const hasAssessedB = b._effTotal>0;
-      const scoreA = hasSalesA?3:(hasBrandA?2:(hasAssessedA?0:1));
-      const scoreB = hasSalesB?3:(hasBrandB?2:(hasAssessedB?0:1));
+      const isPaidA = a.records.some(r=>r.pay==='收費');
+      const isPaidB = b.records.some(r=>r.pay==='收費');
+      const roiA = isPaidA && a._totalRev>0 ? a._totalRev/a.records.reduce((s,r)=>s+extractCost(r.quote),0) : null;
+      const roiB = isPaidB && b._totalRev>0 ? b._totalRev/b.records.reduce((s,r)=>s+extractCost(r.quote),0) : null;
+      const getScore = (hasSales, hasBrand, hasAssessed, isPaid, roi)=>{
+        if(isPaid && roi!==null) return roi>=1.5?3:0;
+        if(hasSales) return 3;
+        if(hasBrand) return 2;
+        if(hasAssessed) return 0;
+        return 1;
+      };
+      const scoreA = getScore(hasSalesA, hasBrandA, hasAssessedA, isPaidA, roiA);
+      const scoreB = getScore(hasSalesB, hasBrandB, hasAssessedB, isPaidB, roiB);
       if(scoreB!==scoreA) return scoreB-scoreA;
       return b._effRate-a._effRate;
     }
@@ -1271,25 +1282,36 @@ function renderDashboard(){
       </div>`).join('');
 
     // 標籤邏輯：
-    // 1. 有效推廣 或 帶動收益 任一有 → 推薦再合作
-    // 2. 只有品牌貢獻，其他都是 — → 品牌貢獻型
-    // 3. 全部都是 — → 待評估
-    // 4. 有效/帶動都是 ❌，品牌貢獻也沒勾 → 謹慎評估
+    // 收費 KOL：ROI ≥ 1.5x → 推薦，ROI < 1.5x → 謹慎
+    // 互惠 KOL：有效推廣 或 帶動收益 任一有 → 推薦
+    // 品牌貢獻型：只有品牌貢獻，其他都是 —
     const hasSalesEff = recs.some(r=>r.effCheck===true||r.drvRevenue===true);
     const hasBrand = recs.some(r=>r.brandVal===true);
     const hasAnyAssessed = recs.some(r=>
       (r.effCheck!==null&&r.effCheck!==undefined)||
       (r.drvRevenue!==null&&r.drvRevenue!==undefined)
     );
+    const isPaidKol = recs.some(r=>r.pay==='收費');
+    const kolTotalCost = recs.reduce((s,r)=>s+extractCost(r.quote),0);
+    const kolTotalRev = recs.reduce((s,r)=>s+(Number(r.revenue)||0),0);
+    const kolRoi = kolTotalCost>0 ? kolTotalRev/kolTotalCost : null;
+
     let badgeCls, badgeText;
-    if(hasSalesEff){
+    if(isPaidKol && kolRoi!==null){
+      // 收費 KOL：依 ROI 判斷
+      if(kolRoi>=1.5){
+        badgeCls='badge-rec'; badgeText='⭐ 推薦再合作';
+      } else {
+        badgeCls='badge-cau'; badgeText='⚠ 謹慎評估（ROI '+kolRoi.toFixed(1)+'x）';
+      }
+    } else if(hasSalesEff){
       badgeCls='badge-rec'; badgeText='⭐ 推薦再合作';
     } else if(hasBrand && !hasAnyAssessed){
       badgeCls='badge-brand'; badgeText='📸 品牌貢獻型';
-    } else if(hasAnyAssessed && !hasSalesEff && !hasBrand){
-      badgeCls='badge-cau'; badgeText='⚠ 謹慎評估';
     } else if(hasBrand && !hasSalesEff){
       badgeCls='badge-brand'; badgeText='📸 品牌貢獻型';
+    } else if(hasAnyAssessed && !hasSalesEff && !hasBrand){
+      badgeCls='badge-cau'; badgeText='⚠ 謹慎評估';
     } else {
       badgeCls='badge-neu'; badgeText='待評估';
     }
