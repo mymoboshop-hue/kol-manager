@@ -1178,7 +1178,28 @@ function renderDashboard(){
     kolMap[key].records.push(d);
   });
 
-  const kols = Object.values(kolMap).sort((a,b)=>b.records.length-a.records.length);
+  const kolList = Object.values(kolMap).map(k=>{
+    const recs = k.records;
+    const effTotal = recs.filter(r=>r.effCheck!==null&&r.effCheck!==undefined).length;
+    const effCount = recs.filter(r=>r.effCheck===true).length;
+    const effRate = effTotal>0 ? effCount/effTotal : 0;
+    const totalRev = recs.reduce((s,r)=>s+(Number(r.revenue)||0),0);
+    return {...k, _effRate:effRate, _effCount:effCount, _effTotal:effTotal, _totalRev:totalRev};
+  });
+
+  const kols = kolList.sort((a,b)=>{
+    if(dashSort==='recommend'){
+      const scoreA = a._effTotal>0 ? (a._effRate>=0.5?2:0) : 1;
+      const scoreB = b._effTotal>0 ? (b._effRate>=0.5?2:0) : 1;
+      if(scoreB!==scoreA) return scoreB-scoreA;
+      return b._effRate-a._effRate;
+    }
+    if(dashSort==='count') return b.records.length-a.records.length;
+    if(dashSort==='effrate') return b._effRate-a._effRate;
+    if(dashSort==='revenue') return b._totalRev-a._totalRev;
+    return 0;
+  });
+
   const sortLabel = {recommend:'推薦優先', count:'合作次數', effrate:'有效率', revenue:'收益'};
   document.getElementById('dash-subtitle').textContent = '共 '+kols.length+' 位 KOL／KOC，依 '+sortLabel[dashSort]+' 排列';
 
