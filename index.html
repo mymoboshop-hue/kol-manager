@@ -139,6 +139,7 @@ tr:hover td{background:#faf9f6}
 .badge-rec{background:#eaf3de;color:#27500a}
 .badge-cau{background:#faeeda;color:#633806}
 .badge-neu{background:#f4f2ee;color:#7a7670;border:0.5px solid #e2ddd5}
+.badge-brand{background:#f0e6f6;color:#6b21a8}
 .kol-stats-g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px}
 .kol-stats-g2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
 .kol-stat{background:#f4f2ee;border-radius:7px;padding:7px 9px}
@@ -358,6 +359,11 @@ th[data-sort]{cursor:pointer;user-select:none}
             <option value="true">💰 有帶動收益（點進連結有購買）</option>
             <option value="false">❌ 無帶動收益</option>
           </select>
+        </div>
+        <div class="fg" style="align-items:center;gap:10px">
+          <label style="margin:0">品牌貢獻</label>
+          <input type="checkbox" id="f-brandval" style="width:18px;height:18px;accent-color:#c4965a;cursor:pointer">
+          <span style="font-size:12px;color:#7a7670">📸 提升品牌質感、形象或觸及（可與有效推廣同時勾選）</span>
         </div>
         <div class="fg full"><label>成效備註</label><textarea id="f-effnote"></textarea></div>
         <div class="fg full" id="fg-prospect" style="display:none">
@@ -937,6 +943,8 @@ function openDetail(d){
     interactRate+effNoteHtml+
     '<div class="d-row"><span class="d-key">有效推廣</span><span class="d-val">'+effStr+'</span></div>'+
     '<div class="d-row"><span class="d-key">帶動收益</span><span class="d-val">'+drvStr+'</span></div>'+
+    '<div class="d-row"><span class="d-key">品牌貢獻</span><span class="d-val">'+(d.brandVal?'📸 是':'—')+'</span></div>'+
+
     ga4Html;
 
   document.getElementById('det-edit-btn').onclick=()=>{ closeDetail(); openEditForm(d); };
@@ -991,6 +999,7 @@ function openEditForm(d){
   document.getElementById('f-effnote').value  = d.effnote||'';
   document.getElementById('f-effcheck').value = d.effCheck===true?'true':d.effCheck===false?'false':'null';
   document.getElementById('f-drvrevenue').value = d.drvRevenue===true?'true':d.drvRevenue===false?'false':'null';
+  document.getElementById('f-brandval').checked = d.brandVal||false;
   document.getElementById('form-wrap').classList.add('open');
 }
 
@@ -999,7 +1008,7 @@ function openAddForm(){
   document.getElementById('form-title').textContent='新增合作';
   ['f-kol','f-topic','f-owner','f-quote','f-products','f-postlink','f-link','f-order','f-address','f-reach','f-engage','f-clicks','f-newfans','f-units','f-revenue','f-adcode','f-effnote'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-type').value='圖文合作';
-  document.getElementById('f-effcheck').value='null'; document.getElementById('f-drvrevenue').value='null';
+  document.getElementById('f-effcheck').value='null'; document.getElementById('f-drvrevenue').value='null'; document.getElementById('f-brandval').checked=false;
   document.getElementById('f-fans').value='';
   document.getElementById('f-pay').value='互惠';
   document.getElementById('f-adAuth').value='0';
@@ -1033,6 +1042,7 @@ function saveForm(){
     ga4url: document.getElementById('f-ga4').dataset.url||null,
     effCheck: document.getElementById('f-effcheck').value==='null'?null:document.getElementById('f-effcheck').value==='true',
     drvRevenue: document.getElementById('f-drvrevenue').value==='null'?null:document.getElementById('f-drvrevenue').value==='true',
+    brandVal: document.getElementById('f-brandval').checked||false,
     link:     document.getElementById('f-link').value,
     orderNo:  document.getElementById('f-order').value,
     address:  document.getElementById('f-address').value,
@@ -1183,19 +1193,29 @@ function renderDashboard(){
     const effCount = recs.filter(r=>r.effCheck===true).length;
     const drvCount = recs.filter(r=>r.drvRevenue===true).length;
     const combinedCount = recs.filter(r=>r.effCheck===true||r.drvRevenue===true).length;
+    const brandCount = recs.filter(r=>r.brandVal===true).length;
+    const isBrandType = brandCount>0 && combinedCount===0;
     const effTotal = recs.filter(r=>
       (r.effCheck!==null&&r.effCheck!==undefined)||
       (r.drvRevenue!==null&&r.drvRevenue!==undefined)
     ).length;
     const effRate = effTotal>0 ? combinedCount/effTotal : 0;
     const totalRev = recs.reduce((s,r)=>s+(Number(r.revenue)||0),0);
-    return {...k, _effRate:effRate, _effCount:effCount, _effTotal:effTotal, _totalRev:totalRev};
+    const brandCount = recs.filter(r=>r.brandVal===true).length;
+    return {...k, _effRate:effRate, _effCount:effCount, _effTotal:effTotal, _totalRev:totalRev, _brandCount:brandCount};
   });
 
   const kols = kolList.sort((a,b)=>{
     if(dashSort==='recommend'){
-      const scoreA = a._effTotal>0 ? (a._effRate>=0.5?2:0) : 1;
-      const scoreB = b._effTotal>0 ? (b._effRate>=0.5?2:0) : 1;
+      // 排序分數：3=推薦, 2=品牌貢獻型, 1=待評估, 0=謹慎
+      const hasSalesA = a.records.some(r=>r.effCheck===true||r.drvRevenue===true);
+      const hasSalesB = b.records.some(r=>r.effCheck===true||r.drvRevenue===true);
+      const hasBrandA = a._brandCount>0;
+      const hasBrandB = b._brandCount>0;
+      const hasAssessedA = a._effTotal>0;
+      const hasAssessedB = b._effTotal>0;
+      const scoreA = hasSalesA?3:(hasBrandA?2:(hasAssessedA?0:1));
+      const scoreB = hasSalesB?3:(hasBrandB?2:(hasAssessedB?0:1));
       if(scoreB!==scoreA) return scoreB-scoreA;
       return b._effRate-a._effRate;
     }
@@ -1221,6 +1241,8 @@ function renderDashboard(){
     const drvCount = recs.filter(r=>r.drvRevenue===true).length;
     // 方案A：有效推廣 OR 帶動收益 任一有打就算有效
     const combinedCount = recs.filter(r=>r.effCheck===true||r.drvRevenue===true).length;
+    const brandCount = recs.filter(r=>r.brandVal===true).length;
+    const isBrandType = brandCount>0 && combinedCount===0;
     const effTotal = recs.filter(r=>
       r.effCheck!==null&&r.effCheck!==undefined ||
       r.drvRevenue!==null&&r.drvRevenue!==undefined
@@ -1246,8 +1268,29 @@ function renderDashboard(){
         <span>${r.effCheck===true?'✅':r.effCheck===false?'❌':'—'}</span>
       </div>`).join('');
 
-    const badgeCls = hasAnyEff ? (recommend?'badge-rec':'badge-cau') : 'badge-neu';
-    const badgeText = hasAnyEff ? (recommend?'⭐ 推薦再合作':'⚠ 謹慎評估') : '待評估';
+    // 標籤邏輯：
+    // 1. 有效推廣 或 帶動收益 任一有 → 推薦再合作
+    // 2. 只有品牌貢獻，其他都是 — → 品牌貢獻型
+    // 3. 全部都是 — → 待評估
+    // 4. 有效/帶動都是 ❌，品牌貢獻也沒勾 → 謹慎評估
+    const hasSalesEff = recs.some(r=>r.effCheck===true||r.drvRevenue===true);
+    const hasBrand = recs.some(r=>r.brandVal===true);
+    const hasAnyAssessed = recs.some(r=>
+      (r.effCheck!==null&&r.effCheck!==undefined)||
+      (r.drvRevenue!==null&&r.drvRevenue!==undefined)
+    );
+    let badgeCls, badgeText;
+    if(hasSalesEff){
+      badgeCls='badge-rec'; badgeText='⭐ 推薦再合作';
+    } else if(hasBrand && !hasAnyAssessed){
+      badgeCls='badge-brand'; badgeText='📸 品牌貢獻型';
+    } else if(hasAnyAssessed && !hasSalesEff && !hasBrand){
+      badgeCls='badge-cau'; badgeText='⚠ 謹慎評估';
+    } else if(hasBrand && !hasSalesEff){
+      badgeCls='badge-brand'; badgeText='📸 品牌貢獻型';
+    } else {
+      badgeCls='badge-neu'; badgeText='待評估';
+    }
 
     const paidSection = isPaid ? `
       <div class="kol-stats-g2">
@@ -1285,6 +1328,7 @@ function renderDashboard(){
       <div class="kol-stats-g2" style="margin-bottom:6px">
         <div class="kol-stat"><div class="kol-stat-lbl">✅ 完全有效</div><div class="kol-stat-val sv-green">${effCount} 次</div></div>
         <div class="kol-stat"><div class="kol-stat-lbl">💰 帶動收益</div><div class="kol-stat-val" style="color:#c4965a">${drvCount} 次</div></div>
+        <div class="kol-stat"><div class="kol-stat-lbl">📸 品牌貢獻</div><div class="kol-stat-val" style="color:#6b21a8">${typeof brandCount!=="undefined"?brandCount+" 次":"—"}</div></div>
       </div>
       ${paidSection}
       <div class="kol-proj-wrap">
