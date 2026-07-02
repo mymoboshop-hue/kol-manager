@@ -1139,104 +1139,6 @@ document.getElementById('main-table').addEventListener('change', async (e)=>{
 });
 
 
-// ── 儀表板 ──
-function showDashboard(){
-  document.getElementById('dashboard-wrap').classList.add('show');
-  document.querySelector('.tbl-wrap').style.display='none';
-  document.querySelector('.stats').style.display='none';
-  renderDashboard();
-}
-function hideDashboard(){
-  document.getElementById('dashboard-wrap').classList.remove('show');
-  document.querySelector('.tbl-wrap').style.display='';
-  document.querySelector('.stats').style.display='';
-}
-function renderDashboard(){
-  // 取得所有有過合作紀錄的 KOL（狀態為已結案或有成效數據）
-  const kolMap = {};
-  data.forEach(d=>{
-    if(!d.kol) return;
-    if(!kolMap[d.kol]) kolMap[d.kol] = {kol:d.kol, type:d.type, fans:d.fans, records:[]};
-    kolMap[d.kol].records.push(d);
-  });
-
-  const kols = Object.values(kolMap).filter(k=>k.records.length>0);
-  document.getElementById('dash-subtitle').textContent = '共 '+kols.length+' 位 KOL／KOC';
-
-  const grid = document.getElementById('dash-grid');
-  grid.innerHTML = kols.map(k=>{
-    const recs = k.records.sort((a,b)=> (b.date||'') > (a.date||'') ? 1:-1);
-    const total = recs.length;
-    const effCount = recs.filter(r=>r.effCheck).length;
-    const effRate = total>0 ? Math.round(effCount/total*100) : 0;
-    const isPaid = recs.some(r=>r.pay==='收費');
-    const totalCost = recs.reduce((s,r)=>s+extractCost(r.quote),0);
-    const totalRev = recs.reduce((s,r)=>s+(Number(r.revenue)||0),0);
-    const totalReach = recs.reduce((s,r)=>s+(Number(r.reach)||0),0);
-    const totalEngage = recs.reduce((s,r)=>s+(Number(r.engage)||0),0);
-    const engageRate = totalReach>0 ? (totalEngage/totalReach*100).toFixed(1) : '—';
-    const roi = totalCost>0 ? (totalRev/totalCost).toFixed(1)+'x' : '—';
-    const lastDate = recs[0]?.date || '—';
-    const recommend = effRate>=50;
-    const initials = k.kol.replace('@','').slice(0,2).toUpperCase();
-    const colors = ['#eaf3de|#27500a','#EEEDFE|#3C3489','#faeeda|#633806','#FAECE7|#712B13','#E1F5EE|#085041'];
-    const ci = (k.kol.charCodeAt(1)||0) % colors.length;
-    const [bg,fg] = colors[ci].split('|');
-
-    const recentProjs = recs.slice(0,3).map(r=>`
-      <div class="kol-proj-item">
-        <span>${r.topic||r.kol}</span>
-        <span style="color:#7a7670">${r.date||'—'}</span>
-        <span>${r.effCheck?'✅':'❌'}</span>
-      </div>`).join('');
-
-    return `
-    <div class="kol-card">
-      <div class="kol-card-head">
-        <div style="display:flex;align-items:center;flex:1">
-          <div class="kol-avatar" style="background:${bg};color:${fg}">${initials}</div>
-          <div class="kol-info">
-            <a href="https://www.instagram.com/${k.kol.replace('@','')}/" target="_blank" class="kol-name" style="text-decoration:none;display:flex;align-items:center;gap:4px"><i class="ti ti-brand-instagram" aria-hidden="true"></i>${k.kol}</a>
-            <div class="kol-meta">${k.type||'—'} ｜ ${k.fans||'—'}</div>
-          </div>
-        </div>
-        <span class="dash-badge ${recommend?'green':'amber'}">
-          ${recommend?'<i class="ti ti-star"></i> 推薦再合作':'<i class="ti ti-alert-triangle"></i> 謹慎評估'}
-        </span>
-      </div>
-
-      <div class="kol-stats-grid">
-        <div class="kol-stat"><div class="kol-stat-label">合作次數</div><div class="kol-stat-val">${total} 次</div></div>
-        <div class="kol-stat"><div class="kol-stat-label">有效推廣</div><div class="kol-stat-val ${effCount>0?'green':''}">${effCount} 次</div></div>
-        <div class="kol-stat"><div class="kol-stat-label">有效率</div><div class="kol-stat-val ${effRate>=50?'green':'amber'}">${effRate}%</div></div>
-      </div>
-
-      ${isPaid ? `
-      <div class="kol-stats-grid" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
-        <div class="kol-stat"><div class="kol-stat-label">總費用</div><div class="kol-stat-val">$${totalCost.toLocaleString()}</div></div>
-        <div class="kol-stat"><div class="kol-stat-label">總收益</div><div class="kol-stat-val green">$${totalRev.toLocaleString()}</div></div>
-      </div>
-      <div class="kol-stat" style="margin-bottom:8px"><div class="kol-stat-label">整體 ROI</div><div class="kol-stat-val green">${roi}</div></div>
-      ` : `
-      <div class="kol-stats-grid" style="margin-bottom:8px">
-        <div class="kol-stat"><div class="kol-stat-label">總觸及</div><div class="kol-stat-val">${totalReach.toLocaleString()}</div></div>
-        <div class="kol-stat"><div class="kol-stat-label">總互動</div><div class="kol-stat-val">${totalEngage.toLocaleString()}</div></div>
-        <div class="kol-stat"><div class="kol-stat-label">互動率</div><div class="kol-stat-val green">${engageRate}%</div></div>
-      </div>
-      <span class="dash-badge gray" style="margin-bottom:8px;display:inline-flex">互惠合作，無費用</span>
-      `}
-
-      <div class="kol-proj-list">
-        <div class="kol-proj-label">過往合作企劃</div>
-        ${recentProjs}
-      </div>
-      <div class="kol-footer">
-        <span><i class="ti ti-clock" aria-hidden="true"></i> 最近合作：${lastDate}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
 
 // ── 儀表板 ──
 function showDashboard(){
@@ -1255,7 +1157,6 @@ function hideDashboard(){
 }
 
 function renderDashboard(){
-  // 只取有 kol 帳號的資料，排除空白列
   const kolMap = {};
   data.filter(d=>d.kol&&d.kol.trim()&&!d.kol.includes('預計')).forEach(d=>{
     const key = d.kol.replace('@','').toLowerCase().trim();
@@ -1285,8 +1186,8 @@ function renderDashboard(){
     const engageRate = totalReach>0 ? (totalEngage/totalReach*100).toFixed(1) : null;
     const roi = totalCost>0 ? (totalRev/totalCost).toFixed(1)+'x' : null;
     const lastDate = recs[0]?.date ? recs[0].date.slice(0,7) : null;
+    const hasAnyEff = recs.some(r=>r.effCheck!==undefined && r.effCheck!==null);
     const recommend = effRate>=50;
-    const hasAnyEff = recs.some(r=>r.effCheck!==undefined);
     const initials = k.kol.replace('@','').slice(0,2).toUpperCase();
     const [bg,fg] = colors[ki % colors.length];
 
@@ -1327,15 +1228,12 @@ function renderDashboard(){
         </div>
         <span class="dash-badge ${badgeCls}">${badgeText}</span>
       </div>
-
       <div class="kol-stats-g">
         <div class="kol-stat"><div class="kol-stat-lbl">合作次數</div><div class="kol-stat-val">${total} 次</div></div>
         <div class="kol-stat"><div class="kol-stat-lbl">有效推廣</div><div class="kol-stat-val ${effCount>0?'sv-green':''}">${hasAnyEff?effCount+' 次':'—'}</div></div>
         <div class="kol-stat"><div class="kol-stat-lbl">有效率</div><div class="kol-stat-val ${effRate>=50?'sv-green':effRate>0?'sv-amber':''}">${hasAnyEff?effRate+'%':'—'}</div></div>
       </div>
-
       ${paidSection}
-
       <div class="kol-proj-wrap">
         <div class="kol-proj-lbl">過往合作企劃（最近 3 次）</div>
         ${recentProjs}
