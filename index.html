@@ -893,42 +893,49 @@ function render(){
 // ── Detail ──
 function openDetail(d){
   document.getElementById('det-kol').innerHTML='<a href="https://www.instagram.com/'+d.kol+'/" target="_blank" style="color:#2d4a3e;text-decoration:none;display:flex;align-items:center;gap:6px"><i class="ti ti-brand-instagram"></i> @'+d.kol+'</a>';
-  document.getElementById('det-body').innerHTML=`
-    <div class="d-sec">基本資訊</div>
-    <div class="d-row"><span class="d-key">合作形式</span><span class="d-val">${typeTag(d.type)}</span></div>
-    <div class="d-row"><span class="d-key">粉絲數</span><span class="d-val">${d.fans||'—'}</span></div>
-    <div class="d-row"><span class="d-key">主題</span><span class="d-val">${d.topic||'—'}</span></div>
-    <div class="d-row"><span class="d-key">費用</span><span class="d-val">${payTag(d.pay)} ${d.quote?'<span style="color:#7a7670;font-size:12px">'+d.quote+'</span>':''}</span></div>
-    <div class="d-row"><span class="d-key">廣告授權</span><span class="d-val">${adTag(d.adAuth)}</span></div>
-    <div class="d-row"><span class="d-key">狀態</span><span class="d-val">${statusTag(d.status)}</span></div>
-    <div class="d-row"><span class="d-key">負責人</span><span class="d-val">${d.owner||'—'}</span></div>
-    <div class="d-row"><span class="d-key">合作日期</span><span class="d-val">${fmtDate(d.date)}</span></div>
-    <div class="d-row"><span class="d-key">訂單編號</span><span class="d-val" style="font-family:monospace">${d.orderNo||'—'}</span></div>
-    ${d.adCode?`<div class="d-row"><span class="d-key">廣告主代碼</span><span class="d-val" style="font-family:monospace;font-size:11px">${d.adCode}</span></div>`:''}
-    <div class="d-sec">挑選單品</div>
-    <div class="pbox">${d.products||'（無挑品紀錄）'}</div>
-    ${d.postLink?`<div class="d-sec">合作內容連結</div><div class="d-row"><a href="${d.postLink}" target="_blank" style="color:#2d4a3e;word-break:break-all">${postIcon(d.postLink)} ${d.postLink}</a></div>`:''}
-    ${d.link?`<div class="d-sec">商品連結</div><div class="d-row"><a href="${d.link}" target="_blank" style="color:#0c447c;word-break:break-all">${d.link}</a></div>`:''}
-    ${d.address?`<div class="d-sec">寄件資訊</div><div class="pbox">${d.address}</div>`:''}
-    <div class="d-sec">合作成效</div>
-    <div class="eff-grid">
-      ${['觸及人數','互動數','點擊數','新增粉絲','銷售件數'].map((lbl,i)=>{
-        const vals=[d.reach,d.engage,d.clicks,d.newfans,d.units];
-        const v=vals[i];
-        return `<div class="eff-card"><div class="eff-num">${v!=null?Number(v).toLocaleString():'—'}</div><div class="eff-lbl">${lbl}</div></div>`;
-      }).join('')}
-      <div class="eff-card"><div class="eff-num" style="${d.revenue?'color:#27500a':''}">${d.revenue!=null?'$'+Number(d.revenue).toLocaleString():'—'}</div><div class="eff-lbl">銷售收益</div></div>
-    </div>
-    ${d.reach&&d.engage?`<div class="d-row"><span class="d-key">互動率</span><span class="d-val" style="font-weight:500;color:#2d4a3e">${(d.engage/d.reach*100).toFixed(2)}%</span></div>`:''}
-    ${d.effnote?`<div class="d-row"><span class="d-key">成效備註</span><span class="d-val" style="color:#7a7670">${d.effnote}</span></div>`:''}
-    <div class="d-row"><span class="d-key">有效推廣</span><span class="d-val">${d.effCheck===true?'✅ 有效':d.effCheck===false?'❌ 無效':'— 待評估'}</span></div>
-    <div class="d-row"><span class="d-key">帶動收益</span><span class="d-val">${d.drvRevenue===true?'💰 有帶動':d.drvRevenue===false?'❌ 無':'— 待評估'}</span></div>
-    ${d.ga4url?`<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="${d.ga4url}" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px;cursor:zoom-in" onclick="openLightbox(this.src)" title="點擊放大"></div>":''}
-  `;
+  const effStr = d.effCheck===true?'✅ 有效':d.effCheck===false?'❌ 無效':'— 待評估';
+  const drvStr = d.drvRevenue===true?'💰 有帶動':d.drvRevenue===false?'❌ 無':'— 待評估';
+  const interactRate = (d.reach&&d.engage) ? '<div class="d-row"><span class="d-key">互動率</span><span class="d-val" style="font-weight:500;color:#2d4a3e">'+(d.engage/d.reach*100).toFixed(2)+'%</span></div>' : '';
+  const effNoteHtml = d.effnote ? '<div class="d-row"><span class="d-key">成效備註</span><span class="d-val" style="color:#7a7670">'+d.effnote+'</span></div>' : '';
+  const adCodeHtml = d.adCode ? '<div class="d-row"><span class="d-key">廣告主代碼</span><span class="d-val" style="font-family:monospace;font-size:11px">'+d.adCode+'</span></div>' : '';
+  const postLinkHtml = d.postLink ? '<div class="d-sec">合作內容連結</div><div class="d-row"><a href="'+d.postLink+'" target="_blank" style="color:#2d4a3e;word-break:break-all">'+postIcon(d.postLink)+' '+d.postLink+'</a></div>' : '';
+  const linkHtml = d.link ? '<div class="d-sec">商品連結</div><div class="d-row"><a href="'+d.link+'" target="_blank" style="color:#0c447c;word-break:break-all">'+d.link+'</a></div>' : '';
+  const addrHtml = d.address ? '<div class="d-sec">寄件資訊</div><div class="pbox">'+d.address+'</div>' : '';
+  const ga4Html = d.ga4url ? '<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="'+d.ga4url+'" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px;cursor:zoom-in" onclick="openLightbox(this.src)" title="點擊放大"></div>' : '';
+
+  const effCards = ['觸及人數','互動數','點擊數','新增粉絲','銷售件數'].map((lbl,i)=>{
+    const v=[d.reach,d.engage,d.clicks,d.newfans,d.units][i];
+    return '<div class="eff-card"><div class="eff-num">'+(v!=null?Number(v).toLocaleString():'—')+'</div><div class="eff-lbl">'+lbl+'</div></div>';
+  }).join('');
+
+  document.getElementById('det-body').innerHTML =
+    '<div class="d-sec">基本資訊</div>'+
+    '<div class="d-row"><span class="d-key">合作形式</span><span class="d-val">'+typeTag(d.type)+'</span></div>'+
+    '<div class="d-row"><span class="d-key">粉絲數</span><span class="d-val">'+(d.fans||'—')+'</span></div>'+
+    '<div class="d-row"><span class="d-key">主題</span><span class="d-val">'+(d.topic||'—')+'</span></div>'+
+    '<div class="d-row"><span class="d-key">費用</span><span class="d-val">'+payTag(d.pay)+(d.quote?' <span style="color:#7a7670;font-size:12px">'+d.quote+'</span>':'')+'</span></div>'+
+    '<div class="d-row"><span class="d-key">廣告授權</span><span class="d-val">'+adTag(d.adAuth)+'</span></div>'+
+    '<div class="d-row"><span class="d-key">狀態</span><span class="d-val">'+statusTag(d.status)+'</span></div>'+
+    '<div class="d-row"><span class="d-key">負責人</span><span class="d-val">'+(d.owner||'—')+'</span></div>'+
+    '<div class="d-row"><span class="d-key">合作日期</span><span class="d-val">'+fmtDate(d.date)+'</span></div>'+
+    '<div class="d-row"><span class="d-key">訂單編號</span><span class="d-val" style="font-family:monospace">'+(d.orderNo||'—')+'</span></div>'+
+    adCodeHtml+
+    '<div class="d-sec">挑選單品</div>'+
+    '<div class="pbox">'+(d.products||'（無挑品紀錄）')+'</div>'+
+    postLinkHtml+linkHtml+addrHtml+
+    '<div class="d-sec">合作成效</div>'+
+    '<div class="eff-grid">'+effCards+
+    '<div class="eff-card"><div class="eff-num" style="'+(d.revenue?'color:#27500a':'')+'">'+(d.revenue!=null?'$'+Number(d.revenue).toLocaleString():'—')+'</div><div class="eff-lbl">銷售收益</div></div>'+
+    '</div>'+
+    interactRate+effNoteHtml+
+    '<div class="d-row"><span class="d-key">有效推廣</span><span class="d-val">'+effStr+'</span></div>'+
+    '<div class="d-row"><span class="d-key">帶動收益</span><span class="d-val">'+drvStr+'</span></div>'+
+    ga4Html;
+
   document.getElementById('det-edit-btn').onclick=()=>{ closeDetail(); openEditForm(d); };
   document.getElementById('det-del-btn').onclick=()=>{
     if(confirm('確定要刪除 @'+d.kol+' 嗎？')){
-      data=data.filter(x=>x!==d);  delRowFromFirebase(d.id);
+      data=data.filter(x=>x!==d); delRowFromFirebase(d.id);
       buildSidebar(); render(); closeDetail();
     }
   };
