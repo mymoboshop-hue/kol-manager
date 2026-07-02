@@ -1234,6 +1234,8 @@ function renderDashboard(){
   ];
 
   const grid = document.getElementById('dash-grid');
+  console.log("dash kols:", kols.length, "data:", data.length);
+  if(kols.length===0){ grid.innerHTML='<div style="padding:20px;color:#7a7670">沒有資料，請確認已登入且資料已載入</div>'; return; }
   grid.innerHTML = kols.map((k,ki)=>{
     const recs = k.records.sort((a,b)=>(b.date||'')>(a.date||'')?1:-1);
     const total = recs.length;
