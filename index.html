@@ -223,11 +223,6 @@ th[data-sort]{cursor:pointer;user-select:none}
         📊 摘要儀表板
       </button>
     </div>
-    <div class="sb-sec">
-      <button id="btn-dashboard" onclick="showDashboard()" style="width:100%;padding:8px 10px;background:#2d4a3e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center">
-        <i class="ti ti-layout-dashboard" aria-hidden="true"></i> 摘要儀表板
-      </button>
-    </div>
     <div class="sb-sec"><div class="sb-lbl">狀態</div><div id="sb-status"></div></div>
     <div class="sb-sec"><div class="sb-lbl">合作形式</div><div id="sb-type"></div></div>
     <div class="sb-sec"><div class="sb-lbl">費用</div><div id="sb-pay"></div></div>
@@ -236,16 +231,6 @@ th[data-sort]{cursor:pointer;user-select:none}
   </aside>
 
   <div class="main">
-    <div id="dashboard-wrap">
-      <div class="dash-header">
-        <div>
-          <div style="font-size:15px;font-weight:500;color:#2d4a3e">摘要儀表板</div>
-          <div style="font-size:12px;color:#7a7670;margin-top:2px" id="dash-subtitle"></div>
-        </div>
-        <button class="dash-back" id="btn-dash-back">← 返回列表</button>
-      </div>
-      <div class="kol-grid" id="dash-grid"></div>
-    </div>
     <div class="tb">
       <input type="text" id="search" placeholder="搜尋 KOL、主題、負責人...">
       <button class="btn btn-warn" id="btn-reset">✕ 清除篩選</button>
@@ -302,6 +287,7 @@ th[data-sort]{cursor:pointer;user-select:none}
           <th data-sort="revenue" style="text-align:right">銷售收益 <span class="sort-icon" data-col="revenue">⇅</span></th>
           <th data-sort="roi" style="text-align:right">ROI <span class="sort-icon" data-col="roi">⇅</span></th>
           <th style="text-align:center;width:60px;white-space:nowrap">有效推廣</th>
+          <th style="text-align:center;width:60px;white-space:nowrap">帶動收益</th>
           <th style="width:80px">操作</th>
         </tr></thead>
         <tbody id="tbody"></tbody>
@@ -357,6 +343,11 @@ th[data-sort]{cursor:pointer;user-select:none}
           <label style="margin:0">有效推廣</label>
           <input type="checkbox" id="f-effcheck" style="width:18px;height:18px;accent-color:#2d4a3e;cursor:pointer">
           <span style="font-size:12px;color:#7a7670">消費者實際購買商品與 KOL 挑選商品一致</span>
+        </div>
+        <div class="fg" style="align-items:center;gap:10px">
+          <label style="margin:0">帶動收益</label>
+          <input type="checkbox" id="f-drvrevenue" style="width:18px;height:18px;accent-color:#c4965a;cursor:pointer">
+          <span style="font-size:12px;color:#7a7670">顧客從貼文連結點進購買（不限商品）</span>
         </div>
         <div class="fg full"><label>成效備註</label><textarea id="f-effnote"></textarea></div>
         <div class="fg full" id="fg-prospect" style="display:none">
@@ -860,6 +851,7 @@ function render(){
       <td style="text-align:right;font-family:monospace;font-size:12px">${d.revenue!=null?'<span style="color:#27500a;font-weight:500">$'+Number(d.revenue).toLocaleString()+'</span>':'<span style="color:#ccc">—</span>'}</td>
       <td style="text-align:right">${roiBadge(d)}</td>
       <td style="text-align:center;width:60px;font-size:16px">${d.effCheck?'✅':'—'}</td>
+      <td style="text-align:center;width:60px;font-size:16px">${d.drvRevenue?'💰':'—'}</td>
       <td style="display:flex;gap:4px;align-items:center">
         <button class="btn" style="height:26px;padding:0 8px;font-size:14px" data-idx="${i}" data-act="detail">🔍</button>
         <button class="btn" style="height:26px;padding:0 8px;font-size:11px" data-idx="${i}" data-act="edit">編輯</button>
@@ -927,6 +919,7 @@ function openDetail(d){
     ${d.reach&&d.engage?`<div class="d-row"><span class="d-key">互動率</span><span class="d-val" style="font-weight:500;color:#2d4a3e">${(d.engage/d.reach*100).toFixed(2)}%</span></div>`:''}
     ${d.effnote?`<div class="d-row"><span class="d-key">成效備註</span><span class="d-val" style="color:#7a7670">${d.effnote}</span></div>`:''}
     ${d.effCheck!==undefined?`<div class="d-row"><span class="d-key">有效推廣</span><span class="d-val">${d.effCheck?'✅ 是':'❌ 否'}</span></div>`:''}
+    ${d.drvRevenue!==undefined?`<div class="d-row"><span class="d-key">帶動收益</span><span class="d-val">${d.drvRevenue?'💰 是':'❌ 否'}</span></div>`:''}
     ${d.ga4url?`<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="${d.ga4url}" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px;cursor:zoom-in" onclick="openLightbox(this.src)" title="點擊放大"></div>`:''}
   `;
   document.getElementById('det-edit-btn').onclick=()=>{ closeDetail(); openEditForm(d); };
@@ -980,6 +973,7 @@ function openEditForm(d){
   document.getElementById('f-adcode').value   = d.adCode||'';
   document.getElementById('f-effnote').value  = d.effnote||'';
   document.getElementById('f-effcheck').checked = d.effCheck||false;
+  document.getElementById('f-drvrevenue').checked = d.drvRevenue||false;
   document.getElementById('form-wrap').classList.add('open');
 }
 
@@ -988,6 +982,7 @@ function openAddForm(){
   document.getElementById('form-title').textContent='新增合作';
   ['f-kol','f-topic','f-owner','f-quote','f-products','f-postlink','f-link','f-order','f-address','f-reach','f-engage','f-clicks','f-newfans','f-units','f-revenue','f-adcode','f-effnote'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-type').value='圖文合作';
+  document.getElementById('f-drvrevenue').checked=false;
   document.getElementById('f-fans').value='';
   document.getElementById('f-pay').value='互惠';
   document.getElementById('f-adAuth').value='0';
@@ -1020,6 +1015,7 @@ function saveForm(){
     postLink: document.getElementById('f-postlink').value||null,
     ga4url: document.getElementById('f-ga4').dataset.url||null,
     effCheck: document.getElementById('f-effcheck').checked,
+    drvRevenue: document.getElementById('f-drvrevenue').checked,
     link:     document.getElementById('f-link').value,
     orderNo:  document.getElementById('f-order').value,
     address:  document.getElementById('f-address').value,
@@ -1177,6 +1173,7 @@ function renderDashboard(){
     const recs = k.records.sort((a,b)=>(b.date||'')>(a.date||'')?1:-1);
     const total = recs.length;
     const effCount = recs.filter(r=>r.effCheck).length;
+    const drvCount = recs.filter(r=>r.drvRevenue).length;
     const effRate = total>0 ? Math.round(effCount/total*100) : 0;
     const isPaid = recs.some(r=>r.pay==='收費');
     const totalCost = recs.reduce((s,r)=>s+extractCost(r.quote),0);
@@ -1232,6 +1229,10 @@ function renderDashboard(){
         <div class="kol-stat"><div class="kol-stat-lbl">合作次數</div><div class="kol-stat-val">${total} 次</div></div>
         <div class="kol-stat"><div class="kol-stat-lbl">有效推廣</div><div class="kol-stat-val ${effCount>0?'sv-green':''}">${hasAnyEff?effCount+' 次':'—'}</div></div>
         <div class="kol-stat"><div class="kol-stat-lbl">有效率</div><div class="kol-stat-val ${effRate>=50?'sv-green':effRate>0?'sv-amber':''}">${hasAnyEff?effRate+'%':'—'}</div></div>
+      </div>
+      <div class="kol-stats-g2" style="margin-bottom:6px">
+        <div class="kol-stat"><div class="kol-stat-lbl">✅ 完全有效</div><div class="kol-stat-val sv-green">${effCount} 次</div></div>
+        <div class="kol-stat"><div class="kol-stat-lbl">💰 帶動收益</div><div class="kol-stat-val" style="color:#c4965a">${drvCount} 次</div></div>
       </div>
       ${paidSection}
       <div class="kol-proj-wrap">
