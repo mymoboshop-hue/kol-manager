@@ -336,15 +336,21 @@ th[data-sort]{cursor:pointer;user-select:none}
         <div class="fg"><label>銷售件數</label><input id="f-units" type="number" min="0"></div>
         <div class="fg"><label>銷售收益（元）</label><input id="f-revenue" type="number" min="0"></div>
         <div class="fg full"><label>廣告主代碼</label><input id="f-adcode"></div>
-        <div class="fg" style="align-items:center;gap:10px">
-          <label style="margin:0">有效推廣</label>
-          <input type="checkbox" id="f-effcheck" style="width:18px;height:18px;accent-color:#2d4a3e;cursor:pointer">
-          <span style="font-size:12px;color:#7a7670">消費者實際購買商品與 KOL 挑選商品一致</span>
+        <div class="fg">
+          <label>有效推廣</label>
+          <select id="f-effcheck" style="height:34px">
+            <option value="null">— 待評估（數據未出）</option>
+            <option value="true">✅ 有效（購買商品與挑選單品一致）</option>
+            <option value="false">❌ 無效</option>
+          </select>
         </div>
-        <div class="fg" style="align-items:center;gap:10px">
-          <label style="margin:0">帶動收益</label>
-          <input type="checkbox" id="f-drvrevenue" style="width:18px;height:18px;accent-color:#c4965a;cursor:pointer">
-          <span style="font-size:12px;color:#7a7670">顧客從貼文連結點進購買（不限商品）</span>
+        <div class="fg">
+          <label>帶動收益</label>
+          <select id="f-drvrevenue" style="height:34px">
+            <option value="null">— 待評估（數據未出）</option>
+            <option value="true">💰 有帶動收益（點進連結有購買）</option>
+            <option value="false">❌ 無帶動收益</option>
+          </select>
         </div>
         <div class="fg full"><label>成效備註</label><textarea id="f-effnote"></textarea></div>
         <div class="fg full" id="fg-prospect" style="display:none">
@@ -847,8 +853,8 @@ function render(){
       <td style="text-align:right;font-family:monospace;font-size:12px">${d.quote?'<span style="color:#633806">'+fmtCost(d.quote)+'</span>':'<span style="color:#ccc">—</span>'}</td>
       <td style="text-align:right;font-family:monospace;font-size:12px">${d.revenue!=null?'<span style="color:#27500a;font-weight:500">$'+Number(d.revenue).toLocaleString()+'</span>':'<span style="color:#ccc">—</span>'}</td>
       <td style="text-align:right">${roiBadge(d)}</td>
-      <td style="text-align:center;width:60px;font-size:16px">${d.effCheck?'✅':'—'}</td>
-      <td style="text-align:center;width:60px;font-size:16px">${d.drvRevenue?'💰':'—'}</td>
+      <td style="text-align:center;width:60px;font-size:16px">${d.effCheck===true?'✅':d.effCheck===false?'❌':'—'}</td>
+      <td style="text-align:center;width:60px;font-size:16px">${d.drvRevenue===true?'💰':d.drvRevenue===false?'❌':'—'}</td>
       <td style="display:flex;gap:4px;align-items:center">
         <button class="btn" style="height:26px;padding:0 8px;font-size:14px" data-idx="${i}" data-act="detail">🔍</button>
         <button class="btn" style="height:26px;padding:0 8px;font-size:11px" data-idx="${i}" data-act="edit">編輯</button>
@@ -915,8 +921,8 @@ function openDetail(d){
     </div>
     ${d.reach&&d.engage?`<div class="d-row"><span class="d-key">互動率</span><span class="d-val" style="font-weight:500;color:#2d4a3e">${(d.engage/d.reach*100).toFixed(2)}%</span></div>`:''}
     ${d.effnote?`<div class="d-row"><span class="d-key">成效備註</span><span class="d-val" style="color:#7a7670">${d.effnote}</span></div>`:''}
-    ${d.effCheck!==undefined?`<div class="d-row"><span class="d-key">有效推廣</span><span class="d-val">${d.effCheck?'✅ 是':'❌ 否'}</span></div>`:''}
-    ${d.drvRevenue!==undefined?`<div class="d-row"><span class="d-key">帶動收益</span><span class="d-val">${d.drvRevenue?'💰 是':'❌ 否'}</span></div>`:''}
+    `<div class="d-row"><span class="d-key">有效推廣</span><span class="d-val">${d.effCheck===true?'✅ 有效':d.effCheck===false?'❌ 無效':'— 待評估'}</span></div>`
+    `<div class="d-row"><span class="d-key">帶動收益</span><span class="d-val">${d.drvRevenue===true?'💰 有帶動':d.drvRevenue===false?'❌ 無':'— 待評估'}</span></div>`
     ${d.ga4url?`<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="${d.ga4url}" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px;cursor:zoom-in" onclick="openLightbox(this.src)" title="點擊放大"></div>`:''}
   `;
   document.getElementById('det-edit-btn').onclick=()=>{ closeDetail(); openEditForm(d); };
@@ -969,8 +975,8 @@ function openEditForm(d){
   document.getElementById('f-revenue').value  = d.revenue!=null?d.revenue:'';
   document.getElementById('f-adcode').value   = d.adCode||'';
   document.getElementById('f-effnote').value  = d.effnote||'';
-  document.getElementById('f-effcheck').checked = d.effCheck||false;
-  document.getElementById('f-drvrevenue').checked = d.drvRevenue||false;
+  document.getElementById('f-effcheck').value = d.effCheck===true?'true':d.effCheck===false?'false':'null';
+  document.getElementById('f-drvrevenue').value = d.drvRevenue===true?'true':d.drvRevenue===false?'false':'null';
   document.getElementById('form-wrap').classList.add('open');
 }
 
@@ -979,7 +985,7 @@ function openAddForm(){
   document.getElementById('form-title').textContent='新增合作';
   ['f-kol','f-topic','f-owner','f-quote','f-products','f-postlink','f-link','f-order','f-address','f-reach','f-engage','f-clicks','f-newfans','f-units','f-revenue','f-adcode','f-effnote'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('f-type').value='圖文合作';
-  document.getElementById('f-drvrevenue').checked=false;
+  document.getElementById('f-effcheck').value='null'; document.getElementById('f-drvrevenue').value='null';
   document.getElementById('f-fans').value='';
   document.getElementById('f-pay').value='互惠';
   document.getElementById('f-adAuth').value='0';
@@ -1011,8 +1017,8 @@ function saveForm(){
     products: document.getElementById('f-products').value,
     postLink: document.getElementById('f-postlink').value||null,
     ga4url: document.getElementById('f-ga4').dataset.url||null,
-    effCheck: document.getElementById('f-effcheck').checked,
-    drvRevenue: document.getElementById('f-drvrevenue').checked,
+    effCheck: document.getElementById('f-effcheck').value==='null'?null:document.getElementById('f-effcheck').value==='true',
+    drvRevenue: document.getElementById('f-drvrevenue').value==='null'?null:document.getElementById('f-drvrevenue').value==='true',
     link:     document.getElementById('f-link').value,
     orderNo:  document.getElementById('f-order').value,
     address:  document.getElementById('f-address').value,
@@ -1169,9 +1175,10 @@ function renderDashboard(){
   grid.innerHTML = kols.map((k,ki)=>{
     const recs = k.records.sort((a,b)=>(b.date||'')>(a.date||'')?1:-1);
     const total = recs.length;
-    const effCount = recs.filter(r=>r.effCheck).length;
-    const drvCount = recs.filter(r=>r.drvRevenue).length;
-    const effRate = total>0 ? Math.round(effCount/total*100) : 0;
+    const effCount = recs.filter(r=>r.effCheck===true).length;
+    const effTotal = recs.filter(r=>r.effCheck!==null&&r.effCheck!==undefined).length;
+    const drvCount = recs.filter(r=>r.drvRevenue===true).length;
+    const effRate = effTotal>0 ? Math.round(effCount/effTotal*100) : 0;
     const isPaid = recs.some(r=>r.pay==='收費');
     const totalCost = recs.reduce((s,r)=>s+extractCost(r.quote),0);
     const totalRev = recs.reduce((s,r)=>s+(Number(r.revenue)||0),0);
@@ -1207,6 +1214,7 @@ function renderDashboard(){
         <div class="kol-stat"><div class="kol-stat-lbl">總互動</div><div class="kol-stat-val">${totalEngage>0?totalEngage.toLocaleString():'—'}</div></div>
         <div class="kol-stat"><div class="kol-stat-lbl">互動率</div><div class="kol-stat-val sv-green">${engageRate?engageRate+'%':'—'}</div></div>
       </div>
+      ${totalRev>0?`<div class="kol-stat" style="margin-bottom:6px"><div class="kol-stat-lbl">帶動總收益</div><div class="kol-stat-val sv-green">$${totalRev.toLocaleString()}</div></div>`:''}
       <span class="dash-badge badge-neu" style="display:inline-flex;margin-bottom:6px">互惠合作，無費用</span>
     `;
 
