@@ -921,9 +921,9 @@ function openDetail(d){
     </div>
     ${d.reach&&d.engage?`<div class="d-row"><span class="d-key">互動率</span><span class="d-val" style="font-weight:500;color:#2d4a3e">${(d.engage/d.reach*100).toFixed(2)}%</span></div>`:''}
     ${d.effnote?`<div class="d-row"><span class="d-key">成效備註</span><span class="d-val" style="color:#7a7670">${d.effnote}</span></div>`:''}
-    `<div class="d-row"><span class="d-key">有效推廣</span><span class="d-val">${d.effCheck===true?'✅ 有效':d.effCheck===false?'❌ 無效':'— 待評估'}</span></div>
-    <div class="d-row"><span class="d-key">帶動收益</span><span class="d-val">${d.drvRevenue===true?'💰 有帶動':d.drvRevenue===false?'❌ 無':'— 待評估'}</span></div>`
-    ${d.ga4url?`<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="${d.ga4url}" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px;cursor:zoom-in" onclick="openLightbox(this.src)" title="點擊放大"></div>`:''}
+    <div class="d-row"><span class="d-key">有效推廣</span><span class="d-val">${d.effCheck===true?'✅ 有效':d.effCheck===false?'❌ 無效':'— 待評估'}</span></div>
+    <div class="d-row"><span class="d-key">帶動收益</span><span class="d-val">${d.drvRevenue===true?'💰 有帶動':d.drvRevenue===false?'❌ 無':'— 待評估'}</span></div>
+    ${d.ga4url?`<div class="d-row"><span class="d-key">GA4 截圖</span></div><div class="d-row"><img src="${d.ga4url}" style="max-width:100%;max-height:300px;border-radius:8px;border:1px solid #e2ddd5;margin-top:4px;cursor:zoom-in" onclick="openLightbox(this.src)" title="點擊放大"></div>":''}
   `;
   document.getElementById('det-edit-btn').onclick=()=>{ closeDetail(); openEditForm(d); };
   document.getElementById('det-del-btn').onclick=()=>{
