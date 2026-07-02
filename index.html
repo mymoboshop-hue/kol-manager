@@ -1242,8 +1242,8 @@ function renderDashboard(){
     // 方案A：有效推廣 OR 帶動收益 任一有打就算有效
     const combinedCount = recs.filter(r=>r.effCheck===true||r.drvRevenue===true).length;
     const brandCount = recs.filter(r=>r.brandVal===true).length;
-
-
+    const isBrandType = brandCount>0 && combinedCount===0;
+    const effTotal = recs.filter(r=>
       r.effCheck!==null&&r.effCheck!==undefined ||
       r.drvRevenue!==null&&r.drvRevenue!==undefined
     ).length;
