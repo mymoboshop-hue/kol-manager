@@ -14,6 +14,36 @@ body{font-family:system-ui,"Noto Sans TC",sans-serif;font-size:13px;background:#
 .hd-sub{font-size:12px;opacity:.7}
 /* layout */
 .layout{display:flex;height:calc(100vh - 52px)}
+
+/* 儀表板 */
+#dashboard-wrap{display:none;padding:1.25rem}
+#dashboard-wrap.show{display:block}
+.kol-card{background:#fff;border:0.5px solid #e2ddd5;border-radius:12px;padding:1rem 1.25rem;margin-bottom:12px}
+.kol-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.kol-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;flex-shrink:0}
+.kol-info{flex:1;margin-left:10px}
+.kol-name{font-size:14px;font-weight:500;color:#2d4a3e}
+.kol-meta{font-size:11px;color:#7a7670;margin-top:2px}
+.dash-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.dash-badge.green{background:#eaf3de;color:#27500a}
+.dash-badge.amber{background:#faeeda;color:#633806}
+.dash-badge.gray{background:#f4f2ee;color:#7a7670;border:0.5px solid #e2ddd5}
+.kol-stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.kol-stat{background:#f4f2ee;border-radius:8px;padding:8px 10px}
+.kol-stat-label{font-size:10px;color:#7a7670;margin-bottom:3px}
+.kol-stat-val{font-size:15px;font-weight:500;color:#2d4a3e}
+.kol-stat-val.green{color:#27500a}
+.kol-stat-val.amber{color:#633806}
+.kol-proj-list{border-top:0.5px solid #e2ddd5;padding-top:10px;margin-top:8px}
+.kol-proj-label{font-size:10px;color:#7a7670;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.kol-proj-item{display:flex;align-items:center;justify-content:space-between;padding:4px 0;border-bottom:0.5px solid #e2ddd5;font-size:12px}
+.kol-proj-item:last-child{border-bottom:none}
+.kol-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:11px;color:#7a7670}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.dash-back{display:flex;align-items:center;gap:6px;font-size:13px;color:#2d4a3e;cursor:pointer;padding:6px 12px;border:0.5px solid #e2ddd5;border-radius:8px;background:#fff}
+.dash-back:hover{background:#f4f2ee}
+
 /* sidebar */
 .sb{width:200px;background:#fff;border-right:1px solid #e2ddd5;padding:12px;overflow-y:auto;flex-shrink:0}
 .sb-sec{margin-bottom:16px}
@@ -93,6 +123,39 @@ tr:hover td{background:#faf9f6}
 #sync-banner{position:fixed;bottom:16px;right:16px;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:500;z-index:999;box-shadow:0 2px 12px rgba(0,0,0,.15);cursor:pointer;opacity:0;transition:opacity .4s;pointer-events:none}
 #sync-banner.show{opacity:1;pointer-events:auto}
 
+/* 儀表板 */
+#dashboard-wrap{display:none;padding:1.25rem;overflow-y:auto;flex:1}
+#dashboard-wrap.show{display:flex;flex-direction:column}
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.dash-back{display:flex;align-items:center;gap:6px;font-size:13px;color:#2d4a3e;cursor:pointer;padding:6px 12px;border:0.5px solid #e2ddd5;border-radius:8px;background:#fff;border-width:1px}
+.dash-back:hover{background:#f4f2ee}
+.kol-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.kol-card{background:#fff;border:0.5px solid #e2ddd5;border-radius:12px;padding:1rem 1.25rem}
+.kol-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px}
+.kol-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0}
+.kol-info{flex:1;min-width:0}
+.kol-cname{font-size:13px;font-weight:500;color:#2d4a3e;display:flex;align-items:center;gap:4px;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kol-meta{font-size:11px;color:#7a7670;margin-top:2px}
+.dash-badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.badge-rec{background:#eaf3de;color:#27500a}
+.badge-cau{background:#faeeda;color:#633806}
+.badge-neu{background:#f4f2ee;color:#7a7670;border:0.5px solid #e2ddd5}
+.kol-stats-g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px}
+.kol-stats-g2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.kol-stat{background:#f4f2ee;border-radius:7px;padding:7px 9px}
+.kol-stat-lbl{font-size:10px;color:#7a7670;margin-bottom:2px}
+.kol-stat-val{font-size:14px;font-weight:500;color:#2d4a3e}
+.kol-stat-val.sv-green{color:#27500a}
+.kol-stat-val.sv-amber{color:#633806}
+.kol-proj-wrap{border-top:0.5px solid #e2ddd5;padding-top:8px;margin-top:8px}
+.kol-proj-lbl{font-size:9px;color:#7a7670;margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.kol-proj-item{display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:0.5px solid #f4f2ee;font-size:11px;color:#1a1916}
+.kol-proj-item:last-child{border-bottom:none}
+.kol-proj-topic{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px}
+.kol-proj-date{color:#7a7670;font-size:10px;margin-right:6px;flex-shrink:0}
+.kol-footer{margin-top:8px;font-size:10px;color:#7a7670;display:flex;align-items:center;gap:4px}
+
+
 
 /* 排序圖示 */
 th[data-sort]{cursor:pointer;user-select:none}
@@ -155,6 +218,16 @@ th[data-sort]{cursor:pointer;user-select:none}
 
 <div class="layout">
   <aside class="sb">
+    <div class="sb-sec">
+      <button id="btn-dashboard" style="width:100%;padding:8px 10px;background:#2d4a3e;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:4px">
+        📊 摘要儀表板
+      </button>
+    </div>
+    <div class="sb-sec">
+      <button id="btn-dashboard" onclick="showDashboard()" style="width:100%;padding:8px 10px;background:#2d4a3e;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;justify-content:center">
+        <i class="ti ti-layout-dashboard" aria-hidden="true"></i> 摘要儀表板
+      </button>
+    </div>
     <div class="sb-sec"><div class="sb-lbl">狀態</div><div id="sb-status"></div></div>
     <div class="sb-sec"><div class="sb-lbl">合作形式</div><div id="sb-type"></div></div>
     <div class="sb-sec"><div class="sb-lbl">費用</div><div id="sb-pay"></div></div>
@@ -163,6 +236,16 @@ th[data-sort]{cursor:pointer;user-select:none}
   </aside>
 
   <div class="main">
+    <div id="dashboard-wrap">
+      <div class="dash-header">
+        <div>
+          <div style="font-size:15px;font-weight:500;color:#2d4a3e">摘要儀表板</div>
+          <div style="font-size:12px;color:#7a7670;margin-top:2px" id="dash-subtitle"></div>
+        </div>
+        <button class="dash-back" id="btn-dash-back">← 返回列表</button>
+      </div>
+      <div class="kol-grid" id="dash-grid"></div>
+    </div>
     <div class="tb">
       <input type="text" id="search" placeholder="搜尋 KOL、主題、負責人...">
       <button class="btn btn-warn" id="btn-reset">✕ 清除篩選</button>
@@ -191,7 +274,20 @@ th[data-sort]{cursor:pointer;user-select:none}
     </div>
     <div class="stats" id="stats"></div>
     <div class="tbl-wrap">
-      <table id="main-table">
+      
+<div id="dashboard-wrap">
+  <div class="dash-header">
+    <div>
+      <div style="font-size:15px;font-weight:500;color:#2d4a3e">摘要儀表板</div>
+      <div style="font-size:12px;color:#7a7670" id="dash-subtitle"></div>
+    </div>
+    <button class="dash-back" onclick="hideDashboard()">
+      <i class="ti ti-arrow-left" aria-hidden="true"></i> 返回列表
+    </button>
+  </div>
+  <div class="dash-grid" id="dash-grid"></div>
+</div>
+<table id="main-table">
         <thead><tr id="thead-row">
           <th>KOL 帳號</th>
           <th>形式</th>
@@ -776,7 +872,7 @@ function render(){
   tbody.querySelectorAll('select[data-idx]').forEach(sel=>{
     sel.addEventListener('change',()=>{
       const row = rows[parseInt(sel.dataset.idx)];
-      if(row){ row.status=sel.value;  saveRowToSheets(row); buildSidebar(); }
+      if(row){ row.status=sel.value; saveRowToFirebase(row); buildSidebar(); }
     });
   });
 
@@ -801,7 +897,7 @@ function render(){
 
 // ── Detail ──
 function openDetail(d){
-  document.getElementById('det-kol').textContent='@'+d.kol;
+  document.getElementById('det-kol').innerHTML='<a href="https://www.instagram.com/'+d.kol+'/" target="_blank" style="color:#2d4a3e;text-decoration:none;display:flex;align-items:center;gap:6px"><i class="ti ti-brand-instagram"></i> @'+d.kol+'</a>';
   document.getElementById('det-body').innerHTML=`
     <div class="d-sec">基本資訊</div>
     <div class="d-row"><span class="d-key">合作形式</span><span class="d-val">${typeTag(d.type)}</span></div>
@@ -1042,6 +1138,213 @@ document.getElementById('main-table').addEventListener('change', async (e)=>{
   }
 });
 
+
+// ── 儀表板 ──
+function showDashboard(){
+  document.getElementById('dashboard-wrap').classList.add('show');
+  document.querySelector('.tbl-wrap').style.display='none';
+  document.querySelector('.stats').style.display='none';
+  renderDashboard();
+}
+function hideDashboard(){
+  document.getElementById('dashboard-wrap').classList.remove('show');
+  document.querySelector('.tbl-wrap').style.display='';
+  document.querySelector('.stats').style.display='';
+}
+function renderDashboard(){
+  // 取得所有有過合作紀錄的 KOL（狀態為已結案或有成效數據）
+  const kolMap = {};
+  data.forEach(d=>{
+    if(!d.kol) return;
+    if(!kolMap[d.kol]) kolMap[d.kol] = {kol:d.kol, type:d.type, fans:d.fans, records:[]};
+    kolMap[d.kol].records.push(d);
+  });
+
+  const kols = Object.values(kolMap).filter(k=>k.records.length>0);
+  document.getElementById('dash-subtitle').textContent = '共 '+kols.length+' 位 KOL／KOC';
+
+  const grid = document.getElementById('dash-grid');
+  grid.innerHTML = kols.map(k=>{
+    const recs = k.records.sort((a,b)=> (b.date||'') > (a.date||'') ? 1:-1);
+    const total = recs.length;
+    const effCount = recs.filter(r=>r.effCheck).length;
+    const effRate = total>0 ? Math.round(effCount/total*100) : 0;
+    const isPaid = recs.some(r=>r.pay==='收費');
+    const totalCost = recs.reduce((s,r)=>s+extractCost(r.quote),0);
+    const totalRev = recs.reduce((s,r)=>s+(Number(r.revenue)||0),0);
+    const totalReach = recs.reduce((s,r)=>s+(Number(r.reach)||0),0);
+    const totalEngage = recs.reduce((s,r)=>s+(Number(r.engage)||0),0);
+    const engageRate = totalReach>0 ? (totalEngage/totalReach*100).toFixed(1) : '—';
+    const roi = totalCost>0 ? (totalRev/totalCost).toFixed(1)+'x' : '—';
+    const lastDate = recs[0]?.date || '—';
+    const recommend = effRate>=50;
+    const initials = k.kol.replace('@','').slice(0,2).toUpperCase();
+    const colors = ['#eaf3de|#27500a','#EEEDFE|#3C3489','#faeeda|#633806','#FAECE7|#712B13','#E1F5EE|#085041'];
+    const ci = (k.kol.charCodeAt(1)||0) % colors.length;
+    const [bg,fg] = colors[ci].split('|');
+
+    const recentProjs = recs.slice(0,3).map(r=>`
+      <div class="kol-proj-item">
+        <span>${r.topic||r.kol}</span>
+        <span style="color:#7a7670">${r.date||'—'}</span>
+        <span>${r.effCheck?'✅':'❌'}</span>
+      </div>`).join('');
+
+    return `
+    <div class="kol-card">
+      <div class="kol-card-head">
+        <div style="display:flex;align-items:center;flex:1">
+          <div class="kol-avatar" style="background:${bg};color:${fg}">${initials}</div>
+          <div class="kol-info">
+            <a href="https://www.instagram.com/${k.kol.replace('@','')}/" target="_blank" class="kol-name" style="text-decoration:none;display:flex;align-items:center;gap:4px"><i class="ti ti-brand-instagram" aria-hidden="true"></i>${k.kol}</a>
+            <div class="kol-meta">${k.type||'—'} ｜ ${k.fans||'—'}</div>
+          </div>
+        </div>
+        <span class="dash-badge ${recommend?'green':'amber'}">
+          ${recommend?'<i class="ti ti-star"></i> 推薦再合作':'<i class="ti ti-alert-triangle"></i> 謹慎評估'}
+        </span>
+      </div>
+
+      <div class="kol-stats-grid">
+        <div class="kol-stat"><div class="kol-stat-label">合作次數</div><div class="kol-stat-val">${total} 次</div></div>
+        <div class="kol-stat"><div class="kol-stat-label">有效推廣</div><div class="kol-stat-val ${effCount>0?'green':''}">${effCount} 次</div></div>
+        <div class="kol-stat"><div class="kol-stat-label">有效率</div><div class="kol-stat-val ${effRate>=50?'green':'amber'}">${effRate}%</div></div>
+      </div>
+
+      ${isPaid ? `
+      <div class="kol-stats-grid" style="grid-template-columns:1fr 1fr;margin-bottom:8px">
+        <div class="kol-stat"><div class="kol-stat-label">總費用</div><div class="kol-stat-val">$${totalCost.toLocaleString()}</div></div>
+        <div class="kol-stat"><div class="kol-stat-label">總收益</div><div class="kol-stat-val green">$${totalRev.toLocaleString()}</div></div>
+      </div>
+      <div class="kol-stat" style="margin-bottom:8px"><div class="kol-stat-label">整體 ROI</div><div class="kol-stat-val green">${roi}</div></div>
+      ` : `
+      <div class="kol-stats-grid" style="margin-bottom:8px">
+        <div class="kol-stat"><div class="kol-stat-label">總觸及</div><div class="kol-stat-val">${totalReach.toLocaleString()}</div></div>
+        <div class="kol-stat"><div class="kol-stat-label">總互動</div><div class="kol-stat-val">${totalEngage.toLocaleString()}</div></div>
+        <div class="kol-stat"><div class="kol-stat-label">互動率</div><div class="kol-stat-val green">${engageRate}%</div></div>
+      </div>
+      <span class="dash-badge gray" style="margin-bottom:8px;display:inline-flex">互惠合作，無費用</span>
+      `}
+
+      <div class="kol-proj-list">
+        <div class="kol-proj-label">過往合作企劃</div>
+        ${recentProjs}
+      </div>
+      <div class="kol-footer">
+        <span><i class="ti ti-clock" aria-hidden="true"></i> 最近合作：${lastDate}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+// ── 儀表板 ──
+function showDashboard(){
+  document.getElementById('dashboard-wrap').classList.add('show');
+  document.querySelector('.tb').style.display='none';
+  document.getElementById('stats').style.display='none';
+  document.querySelector('.tbl-wrap').style.display='none';
+  renderDashboard();
+}
+
+function hideDashboard(){
+  document.getElementById('dashboard-wrap').classList.remove('show');
+  document.querySelector('.tb').style.display='';
+  document.getElementById('stats').style.display='';
+  document.querySelector('.tbl-wrap').style.display='';
+}
+
+function renderDashboard(){
+  // 只取有 kol 帳號的資料，排除空白列
+  const kolMap = {};
+  data.filter(d=>d.kol&&d.kol.trim()&&!d.kol.includes('預計')).forEach(d=>{
+    const key = d.kol.replace('@','').toLowerCase().trim();
+    if(!kolMap[key]) kolMap[key] = {kol:d.kol, type:d.type, fans:d.fans, records:[]};
+    kolMap[key].records.push(d);
+  });
+
+  const kols = Object.values(kolMap).sort((a,b)=>b.records.length-a.records.length);
+  document.getElementById('dash-subtitle').textContent = '共 '+kols.length+' 位 KOL／KOC，依合作次數排列';
+
+  const colors = [
+    ['#eaf3de','#27500a'],['#EEEDFE','#3C3489'],['#faeeda','#633806'],
+    ['#FAECE7','#712B13'],['#E1F5EE','#085041'],['#e6f1fb','#0c447c']
+  ];
+
+  const grid = document.getElementById('dash-grid');
+  grid.innerHTML = kols.map((k,ki)=>{
+    const recs = k.records.sort((a,b)=>(b.date||'')>(a.date||'')?1:-1);
+    const total = recs.length;
+    const effCount = recs.filter(r=>r.effCheck).length;
+    const effRate = total>0 ? Math.round(effCount/total*100) : 0;
+    const isPaid = recs.some(r=>r.pay==='收費');
+    const totalCost = recs.reduce((s,r)=>s+extractCost(r.quote),0);
+    const totalRev = recs.reduce((s,r)=>s+(Number(r.revenue)||0),0);
+    const totalReach = recs.reduce((s,r)=>s+(Number(r.reach)||0),0);
+    const totalEngage = recs.reduce((s,r)=>s+(Number(r.engage)||0),0);
+    const engageRate = totalReach>0 ? (totalEngage/totalReach*100).toFixed(1) : null;
+    const roi = totalCost>0 ? (totalRev/totalCost).toFixed(1)+'x' : null;
+    const lastDate = recs[0]?.date ? recs[0].date.slice(0,7) : null;
+    const recommend = effRate>=50;
+    const hasAnyEff = recs.some(r=>r.effCheck!==undefined);
+    const initials = k.kol.replace('@','').slice(0,2).toUpperCase();
+    const [bg,fg] = colors[ki % colors.length];
+
+    const recentProjs = recs.slice(0,3).map(r=>`
+      <div class="kol-proj-item">
+        <span class="kol-proj-topic">${r.topic||'—'}</span>
+        <span class="kol-proj-date">${r.date?r.date.slice(0,7):''}</span>
+        <span>${r.effCheck===true?'✅':r.effCheck===false?'❌':'—'}</span>
+      </div>`).join('');
+
+    const badgeCls = hasAnyEff ? (recommend?'badge-rec':'badge-cau') : 'badge-neu';
+    const badgeText = hasAnyEff ? (recommend?'⭐ 推薦再合作':'⚠ 謹慎評估') : '待評估';
+
+    const paidSection = isPaid ? `
+      <div class="kol-stats-g2">
+        <div class="kol-stat"><div class="kol-stat-lbl">總費用</div><div class="kol-stat-val">$${totalCost.toLocaleString()}</div></div>
+        <div class="kol-stat"><div class="kol-stat-lbl">總收益</div><div class="kol-stat-val sv-green">${totalRev>0?'$'+totalRev.toLocaleString():'—'}</div></div>
+      </div>
+      ${roi?`<div class="kol-stat" style="margin-bottom:6px"><div class="kol-stat-lbl">整體 ROI</div><div class="kol-stat-val sv-green">${roi}</div></div>`:''}
+    ` : `
+      <div class="kol-stats-g" style="margin-bottom:6px">
+        <div class="kol-stat"><div class="kol-stat-lbl">總觸及</div><div class="kol-stat-val">${totalReach>0?totalReach.toLocaleString():'—'}</div></div>
+        <div class="kol-stat"><div class="kol-stat-lbl">總互動</div><div class="kol-stat-val">${totalEngage>0?totalEngage.toLocaleString():'—'}</div></div>
+        <div class="kol-stat"><div class="kol-stat-lbl">互動率</div><div class="kol-stat-val sv-green">${engageRate?engageRate+'%':'—'}</div></div>
+      </div>
+      <span class="dash-badge badge-neu" style="display:inline-flex;margin-bottom:6px">互惠合作，無費用</span>
+    `;
+
+    return `
+    <div class="kol-card">
+      <div class="kol-card-head">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+          <div class="kol-avatar" style="background:${bg};color:${fg}">${initials}</div>
+          <div class="kol-info">
+            <a class="kol-cname" href="https://www.instagram.com/${k.kol.replace('@','')}/" target="_blank">@${k.kol.replace('@','')}</a>
+            <div class="kol-meta">${k.type||'—'} ｜ ${k.fans||'—'}</div>
+          </div>
+        </div>
+        <span class="dash-badge ${badgeCls}">${badgeText}</span>
+      </div>
+
+      <div class="kol-stats-g">
+        <div class="kol-stat"><div class="kol-stat-lbl">合作次數</div><div class="kol-stat-val">${total} 次</div></div>
+        <div class="kol-stat"><div class="kol-stat-lbl">有效推廣</div><div class="kol-stat-val ${effCount>0?'sv-green':''}">${hasAnyEff?effCount+' 次':'—'}</div></div>
+        <div class="kol-stat"><div class="kol-stat-lbl">有效率</div><div class="kol-stat-val ${effRate>=50?'sv-green':effRate>0?'sv-amber':''}">${hasAnyEff?effRate+'%':'—'}</div></div>
+      </div>
+
+      ${paidSection}
+
+      <div class="kol-proj-wrap">
+        <div class="kol-proj-lbl">過往合作企劃（最近 3 次）</div>
+        ${recentProjs}
+      </div>
+      ${lastDate?`<div class="kol-footer">🕐 最近合作：${lastDate}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
 // ── 排序表頭點擊 ──
 document.querySelectorAll('th[data-sort]').forEach(th=>{
   th.addEventListener('click',()=>{
@@ -1192,8 +1495,12 @@ document.getElementById('lightbox-img').addEventListener('dblclick', (e)=>{
 
 // 掛到 window 讓 HTML onclick 能呼叫
 window.openLightbox = openLightbox;
+window.showDashboard = showDashboard;
+window.hideDashboard = hideDashboard;
 window.closeLightbox = closeLightbox;
 
+document.getElementById('btn-dashboard').addEventListener('click', showDashboard);
+document.getElementById('btn-dash-back').addEventListener('click', hideDashboard);
 document.getElementById('btn-login').addEventListener('click', login);
 document.getElementById('btn-logout').addEventListener('click', logout);
 </script>
