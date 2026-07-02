@@ -1201,8 +1201,8 @@ function renderDashboard(){
     ).length;
     const effRate = effTotal>0 ? combinedCount/effTotal : 0;
     const totalRev = recs.reduce((s,r)=>s+(Number(r.revenue)||0),0);
-    const brandCount = recs.filter(r=>r.brandVal===true).length;
-    return {...k, _effRate:effRate, _effCount:effCount, _effTotal:effTotal, _totalRev:totalRev, _brandCount:brandCount};
+
+
   });
 
   const kols = kolList.sort((a,b)=>{
@@ -1242,8 +1242,8 @@ function renderDashboard(){
     // 方案A：有效推廣 OR 帶動收益 任一有打就算有效
     const combinedCount = recs.filter(r=>r.effCheck===true||r.drvRevenue===true).length;
     const brandCount = recs.filter(r=>r.brandVal===true).length;
-    const isBrandType = brandCount>0 && combinedCount===0;
-    const effTotal = recs.filter(r=>
+
+
       r.effCheck!==null&&r.effCheck!==undefined ||
       r.drvRevenue!==null&&r.drvRevenue!==undefined
     ).length;
